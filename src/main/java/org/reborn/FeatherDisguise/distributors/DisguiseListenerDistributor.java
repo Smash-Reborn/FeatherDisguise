@@ -1,0 +1,117 @@
+package org.reborn.FeatherDisguise.distributors;
+
+import com.github.retrooper.packetevents.PacketEvents;
+import com.github.retrooper.packetevents.event.simple.PacketPlaySendEvent;
+import com.github.retrooper.packetevents.wrapper.PacketWrapper;
+import lombok.extern.log4j.Log4j2;
+import org.bukkit.entity.Player;
+import org.bukkit.event.HandlerList;
+import org.bukkit.event.Listener;
+import org.jetbrains.annotations.ApiStatus;
+import org.jetbrains.annotations.NotNull;
+import org.reborn.FeatherDisguise.FeatherDisguise;
+import org.reborn.FeatherDisguise.protocol.DisguiseIncomingPacketInterceptor;
+import org.reborn.FeatherDisguise.protocol.DisguiseOutgoingPacketInterceptor;
+import org.reborn.FeatherDisguise.types.AbstractDisguise;
+import org.reborn.FeatherDisguise.util.ITeardown;
+
+import java.util.HashMap;
+
+@Log4j2
+public class DisguiseListenerDistributor implements ITeardown, Listener {
+
+    @NotNull private final FeatherDisguise featherDisguise;
+
+    private HashMap<DisguisePacketDistributorType, IDisguisePacketDistributor> disguisePacketDistributors;
+
+    private DisguiseOutgoingPacketInterceptor outgoingPacketInterceptor;
+    private DisguiseIncomingPacketInterceptor incomingPacketInterceptor;
+
+    public DisguiseListenerDistributor(@NotNull final FeatherDisguise featherDisguise) {
+        this.featherDisguise = featherDisguise;
+        this.initializePacketDistributors();
+
+        featherDisguise.getServer().getPluginManager().registerEvents(this, featherDisguise);
+
+        this.outgoingPacketInterceptor = new DisguiseOutgoingPacketInterceptor(this);
+        this.incomingPacketInterceptor = new DisguiseIncomingPacketInterceptor(this);
+        PacketEvents.getAPI().getEventManager().registerListeners(this.outgoingPacketInterceptor, this.incomingPacketInterceptor);
+    }
+
+    public void handleOutgoingInterceptedPackets(@NotNull final PacketPlaySendEvent packetSendEvent, @NotNull final PacketWrapper<?> interceptedPacket,
+                                                 @NotNull final AbstractDisguise<?> disguise, @NotNull final Player observer) {
+
+        // boutta make you exit this world through intensive care
+        if (disguisePacketDistributors == null || disguisePacketDistributors.isEmpty()) {
+            log.warn("Unable to handle packet distribution for intercepted disguise packets because the distribution map is invalid or null");
+            return;
+        }
+
+        final DisguisePacketDistributorType distributorType;
+        switch (packetSendEvent.getPacketType()) {
+            default:
+                distributorType = DisguisePacketDistributorType.UNKNOWN_OR_INVALID;
+                break;
+            case ENTITY_RELATIVE_MOVE_AND_ROTATION:
+            case ENTITY_RELATIVE_MOVE:
+            case ENTITY_ROTATION:
+                distributorType = DisguisePacketDistributorType.RELATIVE_POSITION_ROTATION;
+                break;
+            case ENTITY_HEAD_LOOK:
+                distributorType = DisguisePacketDistributorType.HEAD_ROTATION;
+                break;
+            case ENTITY_TELEPORT:
+                distributorType = DisguisePacketDistributorType.TELEPORT_POSITION_ROTATION;
+                break;
+            case ENTITY_ANIMATION:
+                distributorType = DisguisePacketDistributorType.ANIMATION;
+                break;
+            case ENTITY_EQUIPMENT:
+                distributorType = DisguisePacketDistributorType.EQUIPMENT;
+                break;
+            case ENTITY_METADATA:
+                distributorType = DisguisePacketDistributorType.METADATA;
+                break;
+            case ENTITY_VELOCITY:
+                distributorType = DisguisePacketDistributorType.VELOCITY;
+                break;
+            case SPAWN_PLAYER:
+                distributorType = DisguisePacketDistributorType.SPAWNING_PLAYER;
+                break;
+            case DESTROY_ENTITIES:
+                distributorType = DisguisePacketDistributorType.DESTROY_PLAYER;
+                break;
+        }
+
+        if (distributorType == DisguisePacketDistributorType.UNKNOWN_OR_INVALID || !disguisePacketDistributors.containsKey(distributorType)) {
+            log.warn("How the fuck are you even getting to this point in the code???? If you are, congrats but also we are super fucked");
+            return;
+        }
+
+        try {
+            disguisePacketDistributors.get(distributorType).handlePacketInterception(packetSendEvent, interceptedPacket, disguise, observer);
+        } catch (Exception ex) {
+            log.warn("Failed to handle packet interception for ({}) type, (pervert: {})", distributorType, observer.getName(), ex);
+        }
+    }
+
+
+    @ApiStatus.Internal
+    private void initializePacketDistributors() {
+        this.disguisePacketDistributors = new HashMap<>(9);
+    }
+
+    @Override
+    public void teardown() {
+        if (disguisePacketDistributors != null) {
+            disguisePacketDistributors.clear();
+            disguisePacketDistributors = null;
+        }
+
+        HandlerList.unregisterAll(this);
+
+        PacketEvents.getAPI().getEventManager().unregisterListeners(outgoingPacketInterceptor, incomingPacketInterceptor);
+        outgoingPacketInterceptor = null;
+        incomingPacketInterceptor = null;
+    }
+}

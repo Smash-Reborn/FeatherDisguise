@@ -10,7 +10,7 @@ import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.reborn.FeatherDisguise.DisguiseType;
 import org.reborn.FeatherDisguise.metadata.AbstractMetadataHolder;
-import org.reborn.FeatherDisguise.util.DisguiseHelper;
+import org.reborn.FeatherDisguise.util.DisguiseUtil;
 import org.reborn.FeatherDisguise.util.EntityEquipmentHandler;
 import org.reborn.FeatherDisguise.wrapper.DisguiseRelatedEntityWrapper;
 
@@ -67,7 +67,7 @@ public class AbstractDisguise<E extends AbstractMetadataHolder<?>> {
 
         // only certain disguises are able to render items in slots.
         // sending equipment packets to them is useless so let's not bother if we can't
-        if (!DisguiseHelper.isDisguiseAbleToRenderItemsInHandSlots(disguiseType) && !DisguiseHelper.isDisguiseAbleToRenderItemsInArmorSlots(disguiseType)) {
+        if (!DisguiseUtil.isDisguiseAbleToRenderItemsInHandSlots(disguiseType) && !DisguiseUtil.isDisguiseAbleToRenderItemsInArmorSlots(disguiseType)) {
             log.warn("Disguise for ({}) is not able to update slots with items because this entity type doesn't support that", owningBukkitPlayer.getName());
             return Optional.empty();
         }

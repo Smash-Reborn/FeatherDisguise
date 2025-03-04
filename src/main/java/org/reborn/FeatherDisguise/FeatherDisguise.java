@@ -11,6 +11,8 @@ public class FeatherDisguise extends JavaPlugin {
 
     @Getter private static JavaPlugin plugin;
 
+    @Getter private static DisguiseAPI disguiseAPI;
+
     private static final String CYAN_CONSOLE_COLOR = "\033[0;36m";
 
     @Override
@@ -26,11 +28,14 @@ public class FeatherDisguise extends JavaPlugin {
         log.info(CYAN_CONSOLE_COLOR + "Enabling FeatherDisguise plugin");
         plugin = this;
         PacketEvents.getAPI().init();
+        disguiseAPI = new DisguiseAPI(this);
     }
 
     @Override
     public void onDisable() {
         log.info(CYAN_CONSOLE_COLOR + "Disabling FeatherDisguise plugin");
+        disguiseAPI.teardown();
+        disguiseAPI = null;
         PacketEvents.getAPI().terminate();
         plugin = null;
     }

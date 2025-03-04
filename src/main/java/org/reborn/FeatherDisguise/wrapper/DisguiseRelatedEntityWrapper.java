@@ -19,7 +19,7 @@ import org.reborn.FeatherDisguise.metadata.EntityType;
 import org.reborn.FeatherDisguise.metadata.modal.LivingEntityMetadataHolder;
 import org.reborn.FeatherDisguise.metadata.types.ArmorStandMetadataHolder;
 import org.reborn.FeatherDisguise.types.AbstractDisguise;
-import org.reborn.FeatherDisguise.util.DisguiseHelper;
+import org.reborn.FeatherDisguise.util.DisguiseUtil;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -90,7 +90,7 @@ public class DisguiseRelatedEntityWrapper<E extends AbstractMetadataHolder<?>> {
                 optDisguiseEntityDependentMetadata.get()));
 
         // send an equipment packet for the hand slot if the player is holding an item & the disguise is allowed to show items in the hand
-        if (DisguiseHelper.isDisguiseAbleToRenderItemsInHandSlots(this.owningDisguise.getDisguiseType()) &&
+        if (DisguiseUtil.isDisguiseAbleToRenderItemsInHandSlots(this.owningDisguise.getDisguiseType()) &&
                 this.owningDisguise.getOwningBukkitPlayer().getEquipment() != null && this.owningDisguise.getOwningBukkitPlayer().getEquipment().getItemInHand().getType() != Material.AIR) {
             spawningPackets.add(new WrapperPlayServerEntityEquipment(this.baseDisguiseEntity.getVirtualID(),
                     Collections.singletonList(

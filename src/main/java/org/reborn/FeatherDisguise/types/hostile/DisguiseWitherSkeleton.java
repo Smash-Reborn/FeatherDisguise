@@ -17,7 +17,7 @@ public class DisguiseWitherSkeleton extends AbstractDisguise<WitherSkeletonMetad
     @NotNull public Sound getDisguiseHurtSound() {
         return Sound.SKELETON_HURT;
     }
-    
+
     @Override
     @NotNull public Sound getDisguiseDeathSound() {
         return Sound.SKELETON_DEATH;
