@@ -58,9 +58,4 @@ public class PacketUtil {
         if (packets.isEmpty()) return; // "fuck this shit im out!"
         packets.forEach(packet -> sendPacketEventsPacket(player, packet, sendSilently));
     }
-
-    public static void sendAmbiguousPacketViaRef(@NotNull final Player player, @NotNull final PacketRef<?> packetRef, final boolean sendSilently) {
-        if (packetRef.isPacketEventsPacket()) {sendPacketEventsPacket(player, (PacketWrapper<?>) packetRef.getPacketObject(), sendSilently);}
-        else {sendNMSPacket(player, (Packet<?>) packetRef.getPacketObject());}
-    }
 }

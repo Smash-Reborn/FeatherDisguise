@@ -76,6 +76,11 @@ public class AbstractMetadataHolder<E extends EntityType<?>> {
         return value != null ? (T) value.getValue() : defaultValue;
     }
 
+    protected <T> void removeIndex(byte index) {
+        Preconditions.checkNotNull(entityMetadata, "Entity metadata hashmap is invalid or null. Unable to remove index");
+        this.entityMetadata.remove(index);
+    }
+
     protected byte getMask(byte index) {
         return this.getIndex(index, (byte) 0); // default bitmask value
     }

@@ -1,14 +1,15 @@
 package org.reborn.FeatherDisguise.types;
 
+import com.github.retrooper.packetevents.util.Vector3d;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.log4j.Log4j2;
-import net.minecraft.server.v1_8_R3.Entity;
 import org.bukkit.ChatColor;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.reborn.FeatherDisguise.DisguiseType;
+import org.reborn.FeatherDisguise.metadata.AbstractMetadataHolder;
 import org.reborn.FeatherDisguise.util.DisguiseHelper;
 import org.reborn.FeatherDisguise.util.EntityEquipmentHandler;
 import org.reborn.FeatherDisguise.wrapper.DisguiseRelatedEntityWrapper;
@@ -17,7 +18,7 @@ import java.util.HashSet;
 import java.util.Optional;
 
 @Log4j2
-public class AbstractDisguise<E extends Entity> {
+public class AbstractDisguise<E extends AbstractMetadataHolder<?>> {
 
     @Getter @NotNull private final DisguiseType disguiseType;
 
@@ -74,5 +75,18 @@ public class AbstractDisguise<E extends Entity> {
         // only constructs the equipment handler if we need too
         if (equipmentHandler == null) {equipmentHandler = new EntityEquipmentHandler();}
         return Optional.of(equipmentHandler);
+    }
+
+    public double getSquidRelatedEntityYOffset() {
+        return 0.0d;
+    }
+
+    public double getCalculatedSquidRelatedEntityYPos(final double baseYInput) {
+        return baseYInput + this.relatedEntityWrapper.getBaseDisguiseDimensions().getEyeHeight() + this.getSquidRelatedEntityYOffset();
+        // playerYPos + dimensions.eyeHeight() + squidRelatedEntityYOffset()
+    }
+
+    @NotNull public Vector3d getCalculatedSquidRelatedEntityPos(final double baseXInput, final double baseYInput, final double baseZInput) {
+        return new Vector3d(baseXInput, this.getCalculatedSquidRelatedEntityYPos(baseYInput), baseZInput);
     }
 }

@@ -5,6 +5,7 @@ import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.reborn.FeatherDisguise.types.AbstractDisguise;
+import org.reborn.FeatherDisguise.types.hostile.DisguiseWitherSkeleton;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.Optional;
@@ -13,38 +14,38 @@ import java.util.Optional;
 public enum DisguiseType {
 
     // Pre-Release
-    CREEPER(DisguiseCreeper.class),
-    SKELETON(DisguiseSkeleton.class),
-    SPIDER(DisguiseSpider.class),
-    ZOMBIE(DisguiseZombie.class),
-    SLIME(DisguiseSlime.class),
+    CREEPER(null),
+    SKELETON(null),
+    SPIDER(null),
+    ZOMBIE(null),
+    SLIME(null),
     GHAST(null),
-    ENDERMAN(DisguiseEnderman.class),
-    PIG(DisguisePig.class),
-    CAVE_SPIDER(DisguiseCaveSpider.class),
-    SHEEP(DisguiseSheep.class),
-    COW(DisguiseCow.class),
+    ENDERMAN(null),
+    PIG(null),
+    CAVE_SPIDER(null),
+    SHEEP(null),
+    COW(null),
     SILVERFISH(null),
-    CHICKEN(DisguiseChicken.class),
-    SQUID(DisguiseSquid.class),
-    WOLF(DisguiseWolf.class),
+    CHICKEN(null),
+    SQUID(null),
+    WOLF(null),
     GIANT(null),
 
     // Adventure Update (1.0)
     MOOSHROOM(null),
-    VILLAGER(DisguiseVillager.class),
-    SNOW_GOLEM(DisguiseSnowman.class),
-    MAGMA_CUBE(DisguiseMagmaCube.class),
-    BLAZE(DisguiseBlaze.class),
+    VILLAGER(null),
+    SNOW_GOLEM(null),
+    MAGMA_CUBE(null),
+    BLAZE(null),
 
     // (1.2)
-    IRON_GOLEM(DisguiseIronGolem.class),
+    IRON_GOLEM(null),
     OCELOT(null),
 
     // Pretty Scary Update (1.4)
-    BAT(DisguiseBat.class),
-    WITCH(DisguiseWitch.class),
-    WITHER_BOSS(DisguiseWitherBoss.class),
+    BAT(null),
+    WITCH(null),
+    WITHER_BOSS(null),
     WITHER_SKELETON(DisguiseWitherSkeleton.class),
     ZOMBIE_VILLAGER(null),
 
@@ -52,11 +53,11 @@ public enum DisguiseType {
     HORSE(null),
     MULE(null),
     DONKEY(null),
-    SKELETON_HORSE(DisguiseSkeletonHorse.class),
-    ZOMBIE_HORSE(DisguiseZombieHorse.class),
+    SKELETON_HORSE(null),
+    ZOMBIE_HORSE(null),
 
     // Bountiful Update (1.8)
-    GUARDIAN(DisguiseGuardian.class),
+    GUARDIAN(null),
     ELDER_GUARDIAN(null),
     RABBIT(null),
     ENDERMITE(null),
