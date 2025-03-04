@@ -1,0 +1,9 @@
+name: FeatherDisguise
+version: '$version'
+description: '$description'
+authors: [ jam ]
+
+main: org.reborn.FeatherDisguise.FeatherDisguise
+database: false
+api-version: 1.8
+depend: [ PacketEvents ]

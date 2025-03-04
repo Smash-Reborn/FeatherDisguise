@@ -1,0 +1,20 @@
+[versions]
+
+fastutil = "8.5.12"
+lombok = "1.18.32"
+log4j = "2.23.1"
+packetevents = "2.7.0"
+
+
+[libraries]
+
+fastutil = { module = "it.unimi.dsi:fastutil-core", version.ref = "fastutil" }
+lombok = { module = "org.projectlombok:lombok", version.ref = "lombok" }
+l4jcore = { module = "org.apache.logging.log4j:log4j-core", version.ref = "log4j" }
+l4japi = { module = "org.apache.logging.log4j:log4j-api", version.ref = "log4j" }
+packetevents = { module = "com.github.retrooper:packetevents-spigot", version.ref = "packetevents" }
+
+
+[bundles]
+
+log4j = ["l4japi", "l4jcore"]
