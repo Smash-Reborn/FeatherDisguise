@@ -83,7 +83,7 @@ public class EntityType<T extends Entity> {
         GIANT = register(EntityGiantZombie.class, org.bukkit.entity.EntityType.GIANT, "Giant", 53, new EntityDimensions(3.6f, 12.0f, 10.44f));
         ZOMBIE = register(EntityZombie.class, org.bukkit.entity.EntityType.ZOMBIE, "Zombie", 54, new EntityDimensions(0.6f, 1.95f, 1.74f));
         ZOMBIE_VILLAGER = register(EntityZombie.class, org.bukkit.entity.EntityType.ZOMBIE, "Zombie", 54, new EntityDimensions(0.6f, 1.95f, 1.74f));                // has to use ZOMBIE data
-        SLIME = register(EntitySlime.class, org.bukkit.entity.EntityType.SLIME, "Slime", 55, new EntityDimensions(0.52f, 0.52f, 0.325f));           // todo scalable within entityDimensions shit
+        SLIME = register(EntitySlime.class, org.bukkit.entity.EntityType.SLIME, "Slime", 55, new EntityDimensions(0.52f, 0.52f, 0.325f));
         GHAST = register(EntityGhast.class, org.bukkit.entity.EntityType.GHAST, "Ghast", 56, new EntityDimensions(4.0f, 4.0f, 2.6f));
         ZOMBIE_PIGMAN = register(EntityPigZombie.class, org.bukkit.entity.EntityType.PIG_ZOMBIE, "PigZombie", 57, new EntityDimensions(0.6f, 1.95f, 1.79f));
         ENDERMAN = register(EntityEnderman.class, org.bukkit.entity.EntityType.ENDERMAN, "Enderman", 58, new EntityDimensions(0.6f, 2.9f, 2.55f));

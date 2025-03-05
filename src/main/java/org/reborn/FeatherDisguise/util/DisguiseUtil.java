@@ -7,10 +7,13 @@ import com.github.retrooper.packetevents.wrapper.play.server.*;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.bukkit.Location;
+import org.bukkit.craftbukkit.v1_8_R3.CraftWorld;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.reborn.FeatherDisguise.DisguiseType;
+import org.reborn.FeatherDisguise.types.AbstractDisguise;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -18,6 +21,35 @@ import java.util.List;
 @Log4j2
 @NoArgsConstructor(access = AccessLevel.NONE)
 public class DisguiseUtil {
+
+    /** Attempts to play a {@link org.bukkit.Sound} at the given {@link Location} via the {@code sound}
+     * fields found within the provided {@link AbstractDisguise}.
+     * @apiNote
+     * The only reason this exists is for some reason in 1.8, mojank or spigot just didn't bother to
+     * add all the sounds to the {@link org.bukkit.Sound} enum. And there are certain entity
+     * sounds we need to use that aren't provided. So this is the workaround, that lets
+     * us use interchangeable sound references without too much fucking around.
+     * **/
+    public static void playDisguiseSoundAtLocation(@NotNull Location location, @NotNull AbstractDisguise<?> disguise, boolean deathSound) {
+        final float volume = disguise.getDisguiseBaseSoundVolume() + (float) (0.5f * Math.random());
+        final float pitch = disguise.getDisguiseBaseSoundPitch() + (float) (0.4f * Math.random());
+
+        if (!deathSound) {
+            if (disguise.getDisguiseHurtSoundString() != null) {
+                ((CraftWorld) location.getWorld()).getHandle().makeSound(
+                        location.getX(), location.getY(), location.getZ(),
+                        disguise.getDisguiseHurtSoundString(), volume, pitch);
+            }
+        }
+
+        else {
+            if (disguise.getDisguiseDeathSoundString() != null) {
+                ((CraftWorld) location.getWorld()).getHandle().makeSound(
+                        location.getX(), location.getY(), location.getZ(),
+                        disguise.getDisguiseDeathSoundString(), volume, pitch);
+            }
+        }
+    }
 
     /** @return List of {@link Player} within the {@link org.bukkit.World}. **/
     @NotNull public static List<Player> getPlayersInWorldExcluding(@NotNull Player toExclude) {

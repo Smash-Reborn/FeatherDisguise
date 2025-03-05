@@ -3,7 +3,9 @@ package org.reborn.FeatherDisguise;
 import com.github.retrooper.packetevents.wrapper.PacketWrapper;
 import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerDestroyEntities;
 import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
+import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
+import it.unimi.dsi.fastutil.objects.ObjectIterator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.bukkit.entity.Player;
@@ -380,7 +382,15 @@ public class DisguiseAPI implements ITeardown {
     @Override
     public void teardown() {
 
-        // todo revert all disguses and clear any data
+        // revert all disguises and clear any data
+        if (activeDisguiseData != null && !activeDisguiseData.isEmpty()) {
+            final ObjectIterator<Int2ObjectMap.Entry<AbstractDisguise<?>>> disguiseIterator = activeDisguiseData.int2ObjectEntrySet().fastIterator();
+            while (disguiseIterator.hasNext()) {
+                final AbstractDisguise<?> disguise = disguiseIterator.next().getValue();
+                this.hideDisguiseForPlayersInWorld(disguise, true); // this will remove the disguise entities & make players visible again
+                disguiseIterator.remove();
+            }
+        }
 
         if (disguiseHittableData != null && !disguiseHittableData.isEmpty()) {disguiseHittableData.clear();}
 

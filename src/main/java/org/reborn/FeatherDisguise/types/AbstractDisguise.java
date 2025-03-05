@@ -6,8 +6,10 @@ import lombok.Setter;
 import lombok.extern.log4j.Log4j2;
 import org.bukkit.ChatColor;
 import org.bukkit.Sound;
+import org.bukkit.craftbukkit.v1_8_R3.CraftSound;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.reborn.FeatherDisguise.DisguiseType;
 import org.reborn.FeatherDisguise.metadata.types.AbstractMetadataHolder;
 import org.reborn.FeatherDisguise.util.DisguiseUtil;
@@ -47,12 +49,22 @@ public class AbstractDisguise<E extends AbstractMetadataHolder<?>> {
         this.viewingPlayerIDsMarkedAsHidden = new HashSet<>();
     }
 
-    @NotNull public Sound getDisguiseHurtSound() {
+    @Nullable public Sound getDisguiseHurtSound() {
         return Sound.HURT_FLESH;
     }
 
-    @NotNull public Sound getDisguiseDeathSound() {
-        return Sound.FALL_BIG;
+    @Nullable public Sound getDisguiseDeathSound() {
+        return Sound.HURT_FLESH;
+    }
+
+    @Nullable public String getDisguiseHurtSoundString() {
+        return this.getDisguiseHurtSound() != null ?
+                CraftSound.getSound(this.getDisguiseHurtSound()) : null;
+    }
+
+    @Nullable public String getDisguiseDeathSoundString() {
+        return this.getDisguiseDeathSound() != null ?
+                CraftSound.getSound(this.getDisguiseDeathSound()) : null;
     }
 
     public float getDisguiseBaseSoundVolume() {

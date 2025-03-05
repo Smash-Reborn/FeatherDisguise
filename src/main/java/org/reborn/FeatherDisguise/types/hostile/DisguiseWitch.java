@@ -4,27 +4,27 @@ import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.reborn.FeatherDisguise.DisguiseType;
-import org.reborn.FeatherDisguise.metadata.types.hostile.WitherSkeletonMetadataHolder;
+import org.reborn.FeatherDisguise.metadata.types.hostile.WitchMetadataHolder;
 import org.reborn.FeatherDisguise.types.AbstractDisguise;
 
-public class DisguiseWitherSkeleton extends AbstractDisguise<WitherSkeletonMetadataHolder> {
+public class DisguiseWitch extends AbstractDisguise<WitchMetadataHolder> {
 
-    public DisguiseWitherSkeleton(@NotNull Player player) {
-        super(DisguiseType.WITHER_SKELETON, new WitherSkeletonMetadataHolder(), player);
+    public DisguiseWitch(@NotNull Player player) {
+        super(DisguiseType.WITCH, new WitchMetadataHolder(), player);
     }
 
     @Override
     @NotNull public Sound getDisguiseHurtSound() {
-        return Sound.SKELETON_HURT;
+        return Sound.VILLAGER_HIT;
     }
 
     @Override
     @NotNull public Sound getDisguiseDeathSound() {
-        return Sound.SKELETON_DEATH;
+        return Sound.VILLAGER_NO;
     }
 
     @Override
     public float getDisguiseBaseSoundPitch() {
-        return 0.56f;
+        return 0.6f;
     }
 }
