@@ -8,7 +8,10 @@ import lombok.extern.log4j.Log4j2;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.reborn.FeatherDisguise.distributors.DisguiseListenerDistributor;
+import org.reborn.FeatherDisguise.types.AbstractDisguise;
 import org.reborn.FeatherDisguise.util.DisguiseUtil;
+
+import java.util.Optional;
 
 @AllArgsConstructor @Log4j2
 public class DisguiseOutgoingPacketInterceptor extends SimplePacketListenerAbstract {
@@ -42,10 +45,21 @@ public class DisguiseOutgoingPacketInterceptor extends SimplePacketListenerAbstr
             return;
         }
 
-        // todo retrieve disguise
-        //  check if valid
-        //  make sure not the observer
+        final Optional<AbstractDisguise<?>> optDisguise = disguiseListenerDistributor.getFeatherDisguise().getDisguiseAPI().getDisguiseFromEntityID(entityID);
+        if (!optDisguise.isPresent()) return;
 
-        //disguiseListenerDistributor.handleOutgoingInterceptedPackets(e, packetBeingSent, disguise, obvseringPlayer);
+        // we do not want to send packets to the observing player if it's also the disguised player.
+        // that would absolutely fuck the disguised players client up. only VIEWING players should be getting these packets
+        final AbstractDisguise<?> disguise = optDisguise.get();
+        if (disguise.getOwningBukkitPlayer().getEntityId() == obvseringPlayer.getEntityId()) return;
+
+        /*
+         * --> ok at this point we can confirm a few things:
+         * - the observer who is getting sent packets is a player and is not the disguise owner
+         * - we have a valid entityID from the packet we were sending, and that entityID has a valid disguise loaded (which means they are a player)
+         * - the disguise manager has confirmed the disguise is able to modify/send whatever packets we need to observers
+         */
+
+        disguiseListenerDistributor.handleOutgoingInterceptedPackets(e, packetBeingSent, disguise, obvseringPlayer);
     }
 }

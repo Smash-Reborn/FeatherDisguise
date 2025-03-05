@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import net.minecraft.server.v1_8_R3.EntityPlayer;
 import org.jetbrains.annotations.ApiStatus;
+import org.jetbrains.annotations.NotNull;
 import org.reborn.FeatherDisguise.metadata.EntityMetadataIndexes;
 import org.reborn.FeatherDisguise.metadata.EntityType;
 import org.reborn.FeatherDisguise.metadata.modal.LivingEntityMetadataHolder;
@@ -107,6 +108,40 @@ public class PlayerMetadataHolder extends LivingEntityMetadataHolder<EntityType<
         this.setIndex((byte) EntityMetadataIndexes.PLAYER_SCORE, EntityDataTypes.INT, score);
     }
 
+    // this is my hacky way to synchronise the nms player metadata with our holder system, since
+    // packetevents for some reason doesn't come with any sort of feature like this in-built into their metadata system
+    public void cheekySynchroniseNMSPlayerMetadataToHolder(@NotNull final EntityPlayer nmsPlayer) {
+
+        // base entity
+        this.setOnFire(nmsPlayer.isBurning());
+        this.setSneaking(nmsPlayer.isSneaking());
+        this.setSprinting(nmsPlayer.isSprinting());
+        this.setPerformingAction((nmsPlayer.getDataWatcher().getByte(0) & 1 << EntityBitMaskType.IS_DOING_ACTION.getBitID()) != 0); // spigot provides no method LOL, so just raw dog it
+        this.setInvisible(nmsPlayer.isInvisible());
+
+        this.setCustomName(nmsPlayer.getCustomName());
+        this.setCustomNameVisible(nmsPlayer.getCustomNameVisible());
+        this.setSilent(nmsPlayer.R());
+
+        // living entity
+        this.setHealth(nmsPlayer.getHealth());
+        this.setPotionEffectColorID(nmsPlayer.getDataWatcher().getInt(EntityMetadataIndexes.LIVING_ENTITY_POTION_EFFECT_COLOR));
+        this.setPotionEffectAmbient(nmsPlayer.getDataWatcher().getByte(EntityMetadataIndexes.LIVING_ENTITY_POTION_EFFECT_AMBIENT) > 0);
+        this.setArrowsStuck(0); // why would we even bother with this lmao
+
+        // player entity
+        this.setCapeEnabled((nmsPlayer.getDataWatcher().getByte(EntityMetadataIndexes.PLAYER_SKIN_FLAGS) & PlayerEntityBitMaskType.HAS_CAPE.getParkMask()) == PlayerEntityBitMaskType.HAS_CAPE.getParkMask());
+        this.setJacketEnabled((nmsPlayer.getDataWatcher().getByte(EntityMetadataIndexes.PLAYER_SKIN_FLAGS) & PlayerEntityBitMaskType.HAS_JACKET.getParkMask()) == PlayerEntityBitMaskType.HAS_JACKET.getParkMask());
+        this.setLeftSleeveEnabled((nmsPlayer.getDataWatcher().getByte(EntityMetadataIndexes.PLAYER_SKIN_FLAGS) & PlayerEntityBitMaskType.HAS_LEFT_SLEEVE.getParkMask()) == PlayerEntityBitMaskType.HAS_LEFT_SLEEVE.getParkMask());
+        this.setRightSleeveEnabled((nmsPlayer.getDataWatcher().getByte(EntityMetadataIndexes.PLAYER_SKIN_FLAGS) & PlayerEntityBitMaskType.HAS_RIGHT_SLEEVE.getParkMask()) == PlayerEntityBitMaskType.HAS_RIGHT_SLEEVE.getParkMask());
+        this.setLeftLegEnabled((nmsPlayer.getDataWatcher().getByte(EntityMetadataIndexes.PLAYER_SKIN_FLAGS) & PlayerEntityBitMaskType.HAS_LEFT_LEG_PANTS.getParkMask()) == PlayerEntityBitMaskType.HAS_LEFT_LEG_PANTS.getParkMask());
+        this.setRightLegEnabled((nmsPlayer.getDataWatcher().getByte(EntityMetadataIndexes.PLAYER_SKIN_FLAGS) & PlayerEntityBitMaskType.HAS_RIGHT_LEG_PANTS.getParkMask()) == PlayerEntityBitMaskType.HAS_RIGHT_LEG_PANTS.getParkMask());
+        this.setRightLegEnabled((nmsPlayer.getDataWatcher().getByte(EntityMetadataIndexes.PLAYER_SKIN_FLAGS) & PlayerEntityBitMaskType.HAS_HAT.getParkMask()) == PlayerEntityBitMaskType.HAS_HAT.getParkMask());
+        this.setCapeBit(false); // this seems to be accurate to nms?
+        this.setAbsorptionHearts(nmsPlayer.getAbsorptionHearts());
+        this.setScore(53915); // b e p i s
+    }
+
     @Getter @AllArgsConstructor
     public enum PlayerEntityBitMaskType {
         HAS_CAPE(0, (byte) 0x01),
@@ -119,6 +154,10 @@ public class PlayerMetadataHolder extends LivingEntityMetadataHolder<EntityType<
 
         private final int bitID;
         private final byte bitValue;
+
+        public int getParkMask() {
+            return 1 << bitID; // copied from decomped src (EnumPlayerModelParts.class)
+        }
     }
 
 }

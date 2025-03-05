@@ -7,10 +7,12 @@ import com.github.retrooper.packetevents.util.Vector3d;
 import com.github.retrooper.packetevents.wrapper.PacketWrapper;
 import com.github.retrooper.packetevents.wrapper.play.server.*;
 import io.github.retrooper.packetevents.util.SpigotConversionUtil;
+import lombok.Getter;
 import net.minecraft.server.v1_8_R3.*;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
+import org.bukkit.craftbukkit.v1_8_R3.entity.CraftPlayer;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 import org.reborn.FeatherDisguise.metadata.AbstractMetadataHolder;
@@ -18,6 +20,7 @@ import org.reborn.FeatherDisguise.metadata.EntityDimensions;
 import org.reborn.FeatherDisguise.metadata.EntityType;
 import org.reborn.FeatherDisguise.metadata.modal.LivingEntityMetadataHolder;
 import org.reborn.FeatherDisguise.metadata.types.ArmorStandMetadataHolder;
+import org.reborn.FeatherDisguise.metadata.types.PlayerMetadataHolder;
 import org.reborn.FeatherDisguise.types.AbstractDisguise;
 import org.reborn.FeatherDisguise.util.DisguiseUtil;
 
@@ -30,13 +33,16 @@ public class DisguiseRelatedEntityWrapper<E extends AbstractMetadataHolder<?>> {
 
     @NotNull private final AbstractDisguise<?> owningDisguise;
 
-    @NotNull private final VirtualDisguiseEntityData<E> baseDisguiseEntity;
+    @NotNull private final PlayerMetadataHolder cachedOwningDisguisePlayerMetadata;
 
-    @NotNull private final VirtualDisguiseEntityData<LivingEntityMetadataHolder<EntityType<EntitySquid>>> hittableSquidEntity;
-    @NotNull private final VirtualDisguiseEntityData<ArmorStandMetadataHolder> nametagArmorStandEntity;
+    @Getter @NotNull private final VirtualDisguiseEntityData<E> baseDisguiseEntity;
+
+    @Getter @NotNull private final VirtualDisguiseEntityData<LivingEntityMetadataHolder<EntityType<EntitySquid>>> hittableSquidEntity;
+    @Getter @NotNull private final VirtualDisguiseEntityData<ArmorStandMetadataHolder> nametagArmorStandEntity;
 
     public DisguiseRelatedEntityWrapper(@NotNull final AbstractDisguise<?> owningDisguise, @NotNull final E baseDisguiseEntityMetadataHolder) {
         this.owningDisguise = owningDisguise;
+        this.cachedOwningDisguisePlayerMetadata = new PlayerMetadataHolder();
         final World bukkitWorld = owningDisguise.getOwningBukkitPlayer().getWorld();
         this.baseDisguiseEntity = new VirtualDisguiseEntityData<>(baseDisguiseEntityMetadataHolder, bukkitWorld);
 
@@ -139,7 +145,37 @@ public class DisguiseRelatedEntityWrapper<E extends AbstractMetadataHolder<?>> {
                 this.hittableSquidEntity.getVirtualID());
     }
 
+    @NotNull public Optional<List<PacketWrapper<?>>> generateSpawningPacketsForDisguisePlayerOwner() {
+        final Location disguisedPlayerCurrentPosRot = this.owningDisguise.getOwningBukkitPlayer().getLocation().clone();
+        final EntityPlayer nmsPlayer = ((CraftPlayer) this.owningDisguise.getOwningBukkitPlayer()).getHandle();
+        final List<PacketWrapper<?>> spawningPackets = new ArrayList<>(1);
+
+        // [!] make sure to synchronise the cached player metadata holder
+        //     (this way when we spawn the player entity back, they will have the correct metadata clientside)
+        cachedOwningDisguisePlayerMetadata.cheekySynchroniseNMSPlayerMetadataToHolder(nmsPlayer);
+
+        // todo do we need player info?
+
+        final Optional<List<EntityData>> optMetadata = cachedOwningDisguisePlayerMetadata.getConstructedListOfMetadata();
+        if (!optMetadata.isPresent()) {
+            return Optional.empty(); // exit early if we cannot construct metadata. we don't want to crash clients!
+        }
+
+        spawningPackets.add(new WrapperPlayServerSpawnPlayer(
+                this.owningDisguise.getOwningBukkitPlayer().getEntityId(), this.owningDisguise.getOwningBukkitPlayer().getUniqueId(),
+                SpigotConversionUtil.fromBukkitLocation(disguisedPlayerCurrentPosRot).getPosition(),
+                disguisedPlayerCurrentPosRot.getYaw(), disguisedPlayerCurrentPosRot.getPitch(),
+                optMetadata.get()));
+
+        return Optional.of(spawningPackets);
+    }
+
+    @NotNull public WrapperPlayServerDestroyEntities generateDestroyPacketForDisguisePlayerOwner() {
+        return new WrapperPlayServerDestroyEntities(this.owningDisguise.getOwningBukkitPlayer().getEntityId());
+    }
+
     @NotNull public EntityDimensions getBaseDisguiseDimensions() {
         return this.baseDisguiseEntity.getMetadataHolder().getEntityType().getEntityDimensions();
     }
+
 }

@@ -24,7 +24,7 @@ public class AbstractDisguise<E extends AbstractMetadataHolder<?>> {
 
     @Getter @NotNull private final Player owningBukkitPlayer;
 
-    @Getter @NotNull private final DisguiseRelatedEntityWrapper<E> relatedEntityWrapper;
+    @Getter @NotNull private final DisguiseRelatedEntityWrapper<E> relatedEntitiesWrapper;
 
     @Getter @Setter @NotNull private String disguiseNametag;
 
@@ -42,7 +42,7 @@ public class AbstractDisguise<E extends AbstractMetadataHolder<?>> {
 
         this.disguiseType = disguiseType;
         this.owningBukkitPlayer = owningPlayer;
-        this.relatedEntityWrapper = new DisguiseRelatedEntityWrapper<>(this, entityObject);
+        this.relatedEntitiesWrapper = new DisguiseRelatedEntityWrapper<>(this, entityObject);
         this.disguiseNametag = ChatColor.YELLOW + owningPlayer.getName();
         this.viewingPlayerIDsMarkedAsHidden = new HashSet<>();
     }
@@ -82,7 +82,7 @@ public class AbstractDisguise<E extends AbstractMetadataHolder<?>> {
     }
 
     public double getCalculatedSquidRelatedEntityYPos(final double baseYInput) {
-        return baseYInput + this.relatedEntityWrapper.getBaseDisguiseDimensions().getEyeHeight() + this.getSquidRelatedEntityYOffset();
+        return baseYInput + this.relatedEntitiesWrapper.getBaseDisguiseDimensions().getEyeHeight() + this.getSquidRelatedEntityYOffset();
         // playerYPos + dimensions.eyeHeight() + squidRelatedEntityYOffset()
     }
 

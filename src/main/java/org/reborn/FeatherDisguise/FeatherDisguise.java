@@ -11,7 +11,7 @@ public class FeatherDisguise extends JavaPlugin {
 
     @Getter private static JavaPlugin plugin;
 
-    @Getter private static DisguiseAPI disguiseAPI;
+    @Getter private DisguiseAPI disguiseAPI;
 
     private static final String CYAN_CONSOLE_COLOR = "\033[0;36m";
 

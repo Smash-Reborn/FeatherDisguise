@@ -7,13 +7,24 @@ import com.github.retrooper.packetevents.wrapper.play.server.*;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.reborn.FeatherDisguise.DisguiseType;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Log4j2
 @NoArgsConstructor(access = AccessLevel.NONE)
 public class DisguiseUtil {
+
+    /** @return List of {@link Player} within the {@link org.bukkit.World}. **/
+    @NotNull public static List<Player> getPlayersInWorldExcluding(@NotNull Player toExclude) {
+        final List<Player> allPlayers = new ArrayList<>(toExclude.getWorld().getPlayers());
+        allPlayers.remove(toExclude);
+        return allPlayers;
+    }
 
     /** Represents an invalid disguise {@code entityID}. Instead of using {@link Integer}, we can
      * make methods within this class return this var instead and prevent any un-necessary unboxing.

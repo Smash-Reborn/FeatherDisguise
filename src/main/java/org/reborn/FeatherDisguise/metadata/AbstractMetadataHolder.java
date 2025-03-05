@@ -64,6 +64,20 @@ public class AbstractMetadataHolder<E extends EntityType<?>> {
         return Optional.of(entityData);
     }
 
+    public void writeConstructedMetadataToIndexList(@NotNull final List<EntityData> entityMetadataList, int... indexes) {
+        if (entityMetadata.isEmpty()) {
+            log.warn("Unable to write constructed metadata to list as the entityMetadata data is invalid or empty");
+            return;
+        }
+
+        for (final int index : indexes) {
+            if (!entityMetadata.containsKey((byte) index)) continue;
+
+            final EntityData storedData = entityMetadata.get((byte) index);
+            entityMetadataList.add(new EntityData(storedData.getIndex(), storedData.getType(), storedData.getValue()));
+        }
+    }
+
     protected <T> void setIndex(byte index, @NotNull EntityDataType<T> dataType, @Nullable T value) {
         Preconditions.checkNotNull(entityMetadata, "Entity metadata hashmap is invalid or null. Unable to set index");
         this.entityMetadata.put(index, new EntityData(index, dataType, value));

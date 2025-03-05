@@ -9,5 +9,5 @@ import org.reborn.FeatherDisguise.types.AbstractDisguise;
 public interface IDisguisePacketDistributor {
 
     void handlePacketInterception(@NotNull final PacketPlaySendEvent packetSendEvent, @NotNull final PacketWrapper<?> interceptedPacket,
-                                  @NotNull final AbstractDisguise<?> disguise, @NotNull final Player observer);
+                                  @NotNull final AbstractDisguise<?> disguise, @NotNull final Player observer, @NotNull final DisguiseListenerDistributor disguiseListenerDistributor);
 }
