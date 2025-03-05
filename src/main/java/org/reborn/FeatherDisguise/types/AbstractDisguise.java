@@ -9,7 +9,7 @@ import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.reborn.FeatherDisguise.DisguiseType;
-import org.reborn.FeatherDisguise.metadata.AbstractMetadataHolder;
+import org.reborn.FeatherDisguise.metadata.types.AbstractMetadataHolder;
 import org.reborn.FeatherDisguise.util.DisguiseUtil;
 import org.reborn.FeatherDisguise.util.EntityEquipmentHandler;
 import org.reborn.FeatherDisguise.wrapper.DisguiseRelatedEntityWrapper;

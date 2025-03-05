@@ -6,7 +6,7 @@ import net.minecraft.server.v1_8_R3.NBTTagCompound;
 import net.minecraft.server.v1_8_R3.World;
 import org.bukkit.craftbukkit.v1_8_R3.CraftWorld;
 import org.jetbrains.annotations.NotNull;
-import org.reborn.FeatherDisguise.metadata.AbstractMetadataHolder;
+import org.reborn.FeatherDisguise.metadata.types.AbstractMetadataHolder;
 
 import java.util.UUID;
 

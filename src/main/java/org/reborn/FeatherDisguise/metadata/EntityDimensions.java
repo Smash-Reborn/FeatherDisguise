@@ -3,9 +3,10 @@ package org.reborn.FeatherDisguise.metadata;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
+import org.jetbrains.annotations.NotNull;
 
 @AllArgsConstructor @Getter @Setter
-public class EntityDimensions {
+public class EntityDimensions implements Cloneable {
 
     private float width;
     private float height;
@@ -21,5 +22,13 @@ public class EntityDimensions {
 
     public static float defaultEyeHeight(float height) {
         return height * 0.85f;
+    }
+
+    @NotNull public EntityDimensions clone() {
+        try {
+            return (EntityDimensions) super.clone();
+        } catch (CloneNotSupportedException var2) {
+            throw new Error(var2);
+        }
     }
 }

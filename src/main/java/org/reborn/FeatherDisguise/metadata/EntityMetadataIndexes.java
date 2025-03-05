@@ -149,6 +149,7 @@ public class EntityMetadataIndexes {
 
     public static final int CREEPER_STATE;
     public static final int CREEPER_IS_POWERED;
+    public static final int CREEPER_IS_IGNITED;
 
     // endregion
 
@@ -161,6 +162,12 @@ public class EntityMetadataIndexes {
     // region Slime
 
     public static final int SLIME_SIZE;
+
+    // endregion
+
+    // region Magma Cube
+
+    public static final int MAGMA_CUBE_SIZE;
 
     // endregion
 
@@ -267,10 +274,13 @@ public class EntityMetadataIndexes {
 
         CREEPER_STATE = 16;
         CREEPER_IS_POWERED = getIncrementedMetadataIndex(CREEPER_STATE);
+        CREEPER_IS_IGNITED = getIncrementedMetadataIndex(CREEPER_IS_POWERED);
 
         GHAST_IS_SCREAMING = 16;
 
         SLIME_SIZE = 16;
+
+        MAGMA_CUBE_SIZE = 16;
 
         SKELETON_TYPE = 13;
 

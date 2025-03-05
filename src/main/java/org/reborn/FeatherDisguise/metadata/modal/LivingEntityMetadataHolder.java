@@ -3,7 +3,7 @@ package org.reborn.FeatherDisguise.metadata.modal;
 import com.github.retrooper.packetevents.protocol.entity.data.EntityDataTypes;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
-import org.reborn.FeatherDisguise.metadata.AbstractMetadataHolder;
+import org.reborn.FeatherDisguise.metadata.types.AbstractMetadataHolder;
 import org.reborn.FeatherDisguise.metadata.EntityMetadataIndexes;
 import org.reborn.FeatherDisguise.metadata.EntityType;
 

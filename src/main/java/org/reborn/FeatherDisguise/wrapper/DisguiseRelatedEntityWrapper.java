@@ -15,12 +15,12 @@ import org.bukkit.World;
 import org.bukkit.craftbukkit.v1_8_R3.entity.CraftPlayer;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
-import org.reborn.FeatherDisguise.metadata.AbstractMetadataHolder;
+import org.reborn.FeatherDisguise.metadata.types.AbstractMetadataHolder;
 import org.reborn.FeatherDisguise.metadata.EntityDimensions;
 import org.reborn.FeatherDisguise.metadata.EntityType;
 import org.reborn.FeatherDisguise.metadata.modal.LivingEntityMetadataHolder;
-import org.reborn.FeatherDisguise.metadata.types.ArmorStandMetadataHolder;
-import org.reborn.FeatherDisguise.metadata.types.PlayerMetadataHolder;
+import org.reborn.FeatherDisguise.metadata.types.passive.ArmorStandMetadataHolder;
+import org.reborn.FeatherDisguise.metadata.types.neutral.PlayerMetadataHolder;
 import org.reborn.FeatherDisguise.types.AbstractDisguise;
 import org.reborn.FeatherDisguise.util.DisguiseUtil;
 

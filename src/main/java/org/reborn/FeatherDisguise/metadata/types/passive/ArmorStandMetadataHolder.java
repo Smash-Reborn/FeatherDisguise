@@ -1,4 +1,4 @@
-package org.reborn.FeatherDisguise.metadata.types;
+package org.reborn.FeatherDisguise.metadata.types.passive;
 
 import com.github.retrooper.packetevents.protocol.entity.data.EntityDataTypes;
 import com.github.retrooper.packetevents.util.Vector3f;

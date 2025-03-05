@@ -1,4 +1,4 @@
-package org.reborn.FeatherDisguise.metadata;
+package org.reborn.FeatherDisguise.metadata.types;
 
 import com.github.retrooper.packetevents.protocol.entity.data.EntityData;
 import com.github.retrooper.packetevents.protocol.entity.data.EntityDataType;
@@ -10,6 +10,8 @@ import lombok.extern.log4j.Log4j2;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.reborn.FeatherDisguise.metadata.EntityMetadataIndexes;
+import org.reborn.FeatherDisguise.metadata.EntityType;
 
 import java.util.ArrayList;
 import java.util.HashMap;

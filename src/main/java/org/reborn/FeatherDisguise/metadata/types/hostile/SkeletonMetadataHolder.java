@@ -1,4 +1,4 @@
-package org.reborn.FeatherDisguise.metadata.types;
+package org.reborn.FeatherDisguise.metadata.types.hostile;
 
 import net.minecraft.server.v1_8_R3.EntitySkeleton;
 import org.reborn.FeatherDisguise.metadata.EntityType;

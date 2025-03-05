@@ -10,7 +10,7 @@ import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.reborn.FeatherDisguise.distributors.DisguiseListenerDistributor;
 import org.reborn.FeatherDisguise.distributors.IDisguisePacketDistributor;
-import org.reborn.FeatherDisguise.metadata.AbstractMetadataHolder;
+import org.reborn.FeatherDisguise.metadata.types.AbstractMetadataHolder;
 import org.reborn.FeatherDisguise.metadata.EntityMetadataIndexes;
 import org.reborn.FeatherDisguise.types.AbstractDisguise;
 

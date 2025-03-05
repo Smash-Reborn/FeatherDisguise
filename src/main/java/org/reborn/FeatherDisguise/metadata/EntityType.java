@@ -28,6 +28,7 @@ public class EntityType<T extends Entity> {
     @NotNull public static final EntityType<EntitySpider> SPIDER;
     @NotNull public static final EntityType<EntityGiantZombie> GIANT;
     @NotNull public static final EntityType<EntityZombie> ZOMBIE;
+    @NotNull public static final EntityType<EntityZombie> ZOMBIE_VILLAGER;
     @NotNull public static final EntityType<EntitySlime> SLIME;
     @NotNull public static final EntityType<EntityGhast> GHAST;
     @NotNull public static final EntityType<EntityPigZombie> ZOMBIE_PIGMAN;
@@ -73,7 +74,7 @@ public class EntityType<T extends Entity> {
         this.entityDimensions = entityDimensions;
     }
 
-    static {
+    static { // these are exactly copied from nms EntityTypes.class
         ARMOR_STAND = register(EntityArmorStand.class, org.bukkit.entity.EntityType.ARMOR_STAND, "ArmorStand", 30, new EntityDimensions(0.5f, 1.975f, 1.7775f));
         CREEPER = register(EntityCreeper.class, org.bukkit.entity.EntityType.CREEPER, "Creeper", 50, new EntityDimensions(0.6f, 1.8f));
         SKELETON = register(EntitySkeleton.class, org.bukkit.entity.EntityType.SKELETON, "Skeleton", 51, new EntityDimensions(0.6f, 1.95f, 1.74f));
@@ -81,6 +82,7 @@ public class EntityType<T extends Entity> {
         SPIDER = register(EntitySpider.class, org.bukkit.entity.EntityType.SPIDER, "Spider", 52, new EntityDimensions(1.4f, 0.9f, 0.65f));
         GIANT = register(EntityGiantZombie.class, org.bukkit.entity.EntityType.GIANT, "Giant", 53, new EntityDimensions(3.6f, 12.0f, 10.44f));
         ZOMBIE = register(EntityZombie.class, org.bukkit.entity.EntityType.ZOMBIE, "Zombie", 54, new EntityDimensions(0.6f, 1.95f, 1.74f));
+        ZOMBIE_VILLAGER = register(EntityZombie.class, org.bukkit.entity.EntityType.ZOMBIE, "Zombie", 54, new EntityDimensions(0.6f, 1.95f, 1.74f));                // has to use ZOMBIE data
         SLIME = register(EntitySlime.class, org.bukkit.entity.EntityType.SLIME, "Slime", 55, new EntityDimensions(0.52f, 0.52f, 0.325f));           // todo scalable within entityDimensions shit
         GHAST = register(EntityGhast.class, org.bukkit.entity.EntityType.GHAST, "Ghast", 56, new EntityDimensions(4.0f, 4.0f, 2.6f));
         ZOMBIE_PIGMAN = register(EntityPigZombie.class, org.bukkit.entity.EntityType.PIG_ZOMBIE, "PigZombie", 57, new EntityDimensions(0.6f, 1.95f, 1.79f));
