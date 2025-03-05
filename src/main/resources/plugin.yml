@@ -1,9 +1,54 @@
 name: FeatherDisguise
-version: '$version'
-description: '$description'
+version: 1.0
+description: "a lightweight non-bullshit ssm disguise plugin"
 authors: [ jam ]
 
 main: org.reborn.FeatherDisguise.FeatherDisguise
 database: false
 api-version: 1.8
-depend: [ PacketEvents ]
+depend: [ packetevents ]
+
+commands:
+
+    disguise:
+        aliases: [ dis, setdisguise ]
+        description: Applies a disguise to a player
+        permission: reborn.featherdisguise.disguise
+        usage: /disguise <player-name> <disguise-type>
+
+    removedisguise:
+        aliases: [ remdis, undisguise, rdis, cleardis, undis ]
+        description: Removes a disguise from a player
+        permission: reborn.featherdisguise.removedisguise
+        usage: /removedisguise <player-name>
+
+    disguiselist:
+        aliases: [ dislist, dlist, disguisetypes, distypes, dt ]
+        description: Shows a list of all disguise types you can equip
+        permission: reborn.featherdisguise.disguiselist
+        usage: /disguiselist
+
+    refreshdisguise:
+        aliases: [ refdis, refreshdis, refdisguise, fixmob, fmob ]
+        description: Refreshes a target player or everyones disguise
+        permission: reborn.featherdisguise.refreshdisguise
+        usage: /refreshdisguise
+
+
+permissions:
+
+    reborn.featherdisguise.disguise:
+        description: Allows user to apply a disguise to a player
+        default: op
+
+    reborn.featherdisguise.removedisguise:
+        description: Allows user to remove a disguise from a player
+        default: op
+
+    reborn.featherdisguise.disguiselist:
+        description: Allows user to pull up a list of all valid disguise types
+        default: op
+
+    reborn.featherdisguise.refreshdisguise:
+        description: Allows user to refresh a target player or all player disguises
+        default: true

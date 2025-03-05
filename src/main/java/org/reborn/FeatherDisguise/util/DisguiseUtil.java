@@ -6,7 +6,6 @@ import com.github.retrooper.packetevents.wrapper.PacketWrapper;
 import com.github.retrooper.packetevents.wrapper.play.server.*;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
-import lombok.extern.log4j.Log4j2;
 import org.bukkit.Location;
 import org.bukkit.craftbukkit.v1_8_R3.CraftWorld;
 import org.bukkit.entity.Player;
@@ -15,12 +14,21 @@ import org.jetbrains.annotations.Nullable;
 import org.reborn.FeatherDisguise.DisguiseType;
 import org.reborn.FeatherDisguise.types.AbstractDisguise;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
-@Log4j2
 @NoArgsConstructor(access = AccessLevel.NONE)
 public class DisguiseUtil {
+
+    /** Cached map of {@link DisguiseType} we are allowing code/commands to reference.
+     * <p>key = disguiseName, value = disguiseType</p>
+     * **/
+    public static final HashMap<String, DisguiseType> ALLOWED_DISGUISE_TYPES;
+    public static final Collection<DisguiseType> LIST_ALLOWED_DISGUISE_TYPES;
+
+    /** Represents an invalid disguise {@code entityID}. Instead of using {@link Integer}, we can
+     * make methods within this class return this var instead and prevent any un-necessary unboxing.
+     * **/
+    public static final int INVALID_DISGUISE_ENTITY_ID = -53915;
 
     /** Attempts to play a {@link org.bukkit.Sound} at the given {@link Location} via the {@code sound}
      * fields found within the provided {@link AbstractDisguise}.
@@ -57,11 +65,6 @@ public class DisguiseUtil {
         allPlayers.remove(toExclude);
         return allPlayers;
     }
-
-    /** Represents an invalid disguise {@code entityID}. Instead of using {@link Integer}, we can
-     * make methods within this class return this var instead and prevent any un-necessary unboxing.
-     * **/
-    public static final int INVALID_DISGUISE_ENTITY_ID = -53915;
 
     /** @return {@code true} if the {@link DisguiseType} is able to render items in the hand-slots. **/
     public static boolean isDisguiseAbleToRenderItemsInHandSlots(@NotNull DisguiseType disguiseType) {
@@ -200,5 +203,48 @@ public class DisguiseUtil {
             case DESTROY_ENTITIES:
                 return ((WrapperPlayServerDestroyEntities) packetWrapper).getEntityIds()[0];
         }
+    }
+
+    /** @return {@link Optional} {@link DisguiseType} that is represented by the {@code string} provided.
+     * If the string is {@code empty}, invalid or {@code null} or doesn't match, return {@link Optional#empty()}.
+     * **/
+    @NotNull public static Optional<DisguiseType> getDisguiseTypeFromString(@NotNull String string) {
+        if (ALLOWED_DISGUISE_TYPES.isEmpty() || !ALLOWED_DISGUISE_TYPES.containsKey(string)) return Optional.empty();
+        return Optional.of(ALLOWED_DISGUISE_TYPES.get(string)); // a cheeky way of being faster aye
+    }
+
+    static {
+        ALLOWED_DISGUISE_TYPES = new HashMap<String, DisguiseType>() {{
+           put("creeper", DisguiseType.CREEPER);
+           put("skeleton", DisguiseType.SKELETON);
+           put("spider", DisguiseType.SPIDER);
+           put("zombie", DisguiseType.ZOMBIE);
+           put("slime", DisguiseType.SLIME);
+           put("enderman", DisguiseType.ENDERMAN);
+           put("pig", DisguiseType.PIG);
+           put("cave_spider", DisguiseType.CAVE_SPIDER);
+           put("sheep", DisguiseType.SHEEP);
+           put("cow", DisguiseType.COW);
+           put("chicken", DisguiseType.CHICKEN);
+           put("squid", DisguiseType.SQUID);
+           put("wolf", DisguiseType.WOLF);
+           put("zombie_pigman", DisguiseType.ZOMBIE_PIGMAN);
+           put("villager", DisguiseType.VILLAGER);
+           put("snowman", DisguiseType.SNOW_GOLEM);
+           put("magma_cube", DisguiseType.MAGMA_CUBE);
+           put("blaze", DisguiseType.BLAZE);
+           put("iron_golem", DisguiseType.IRON_GOLEM);
+           put("bat", DisguiseType.BAT);
+           put("witch", DisguiseType.WITCH);
+           put("wither_boss", DisguiseType.WITHER_BOSS);
+           put("wither_skeleton", DisguiseType.WITHER_SKELETON);
+           put("donkey", DisguiseType.DONKEY);
+           put("skeleton_horse", DisguiseType.SKELETON_HORSE);
+           put("zombie_horse", DisguiseType.ZOMBIE_HORSE);
+           put("guardian", DisguiseType.GUARDIAN);
+           put("elder_guardian", DisguiseType.ELDER_GUARDIAN);
+        }};
+
+        LIST_ALLOWED_DISGUISE_TYPES = Collections.unmodifiableCollection(ALLOWED_DISGUISE_TYPES.values());
     }
 }

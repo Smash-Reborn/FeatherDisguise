@@ -1,6 +1,7 @@
 package org.reborn.FeatherDisguise;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.log4j.Log4j2;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -12,7 +13,7 @@ import org.reborn.FeatherDisguise.types.passive.*;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Optional;
 
-@RequiredArgsConstructor
+@Log4j2 @RequiredArgsConstructor
 public enum DisguiseType {
 
     // Pre-Release
@@ -77,6 +78,7 @@ public enum DisguiseType {
         try {
             return Optional.of(this.disguiseClass.getDeclaredConstructor(Player.class).newInstance(player));
         } catch (InvocationTargetException | InstantiationException | IllegalAccessException | NoSuchMethodException ex) {
+            log.warn("Failed to generate disguise object from type ({})", this.name(), ex);
             return Optional.empty();
         }
     }

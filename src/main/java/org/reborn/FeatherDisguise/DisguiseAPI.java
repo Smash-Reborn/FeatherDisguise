@@ -274,6 +274,27 @@ public class DisguiseAPI implements ITeardown {
         }
     }
 
+    public void refreshDisguiseForPlayer(@NotNull Player observer, @NotNull Player disguisedPlayer) {
+        final Optional<AbstractDisguise<?>> optDisguise = this.getPlayerDisguise(disguisedPlayer);
+        if (!optDisguise.isPresent()) return; // doesn't have a disguise, exit early
+
+        // remove any disguise entities -> re-send packets for spawning
+        final AbstractDisguise<?> disguise = optDisguise.get();
+        this.hideDisguiseForPlayer(disguise, observer, false);
+        this.showDisguiseForPlayer(disguise, observer);
+    }
+
+    public void refreshAllDisguisesForPlayer(@NotNull Player observer) {
+        if (this.activeDisguiseData == null || this.activeDisguiseData.isEmpty()) return;
+
+        // loop over all active disguises:
+        // remove any disguise entities -> re-send packets for spawning
+        for (final AbstractDisguise<?> disguise : this.activeDisguiseData.values()) {
+            this.hideDisguiseForPlayer(disguise, observer, false);
+            this.showDisguiseForPlayer(disguise, observer);
+        }
+    }
+
     /** @return {@link Optional} {@link AbstractDisguise} that is currently active
      * for the {@link Player}. If there is no valid disguise, then instead returns {@link Optional#empty()}.
      * **/

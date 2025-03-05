@@ -4,15 +4,15 @@ plugins {
     id("com.gradleup.shadow") version("8.3.0")
 }
 
+// --> packaging
 group = "org.reborn"
 version = "1.0"
-description = "A lightweight kinda-bullshit disguise plugin for general use"
+description = "A lightweight non-bullshit ssm disguise plugin"
 
+// --> version control
 java.toolchain.languageVersion = JavaLanguageVersion.of(8)
 java.sourceCompatibility = JavaVersion.VERSION_1_8
 java.targetCompatibility = JavaVersion.VERSION_1_8
-tasks.compileJava { options.encoding = "UTF-8" }
-tasks.javadoc { options.encoding = "UTF-8" }
 
 repositories {
     mavenCentral()
@@ -33,4 +33,13 @@ dependencies {
     api(libs.fastutil)
 
     compileOnly(files("dependencies/spigot-1.8.8.jar"))
+}
+
+// --> building
+tasks.compileJava { options.encoding = "UTF-8" }
+tasks.javadoc { options.encoding = "UTF-8" }
+tasks.shadowJar { archiveFileName = "FeatherDisguise.jar" }
+tasks.processResources { include("plugin.yml") }
+tasks.build {
+    dependsOn(tasks.processResources)
 }

@@ -104,7 +104,7 @@ public class ArmorStandMetadataHolder extends LivingEntityMetadataHolder<EntityT
         return this.getIndex((byte) EntityMetadataIndexes.ARMOR_STAND_LEFT_LEG_POSITION, new Vector3f(-1.0f, 0f, -1.0f));
     }
 
-    public void setLeftLegRotation(@NotNull Vector3f leftLegRotation) {
+    public void setLeftLegRotation(@NotNull Vector3f leftLegRotation) { // todo for some reason this is throwing a massive error???
         this.setIndex((byte) EntityMetadataIndexes.ARMOR_STAND_LEFT_LEG_POSITION, EntityDataTypes.ROTATION, leftLegRotation);
     }
 
