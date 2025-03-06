@@ -1,6 +1,7 @@
 package org.reborn.FeatherDisguise.distributors.impl;
 
 import com.github.retrooper.packetevents.event.simple.PacketPlaySendEvent;
+import com.github.retrooper.packetevents.util.Vector3d;
 import com.github.retrooper.packetevents.wrapper.PacketWrapper;
 import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerEntityTeleport;
 import org.bukkit.entity.Player;
@@ -38,9 +39,11 @@ public class DisguisePacketTeleportDistributor implements IDisguisePacketDistrib
 
         final WrapperPlayServerEntityTeleport squidRelatedTeleportPacket = new WrapperPlayServerEntityTeleport(
                 disguise.getRelatedEntitiesWrapper().getHittableSquidEntity().getVirtualID(),
-                teleportPacket.getPosition().add(0, disguise.getCalculatedSquidRelatedEntityYPos(teleportPacket.getValues().getPosition().getY()), 0),
+                new Vector3d(
+                        teleportPacket.getPosition().getX(),
+                        disguise.getCalculatedSquidRelatedEntityYPos(teleportPacket.getPosition().getY()),
+                        teleportPacket.getPosition().getZ()),
                 0f, 0f, false);
-        // todo is setting the delta to .zero() gonna fuck shit up?
 
         PacketUtil.sendPacketEventsPacket(observer, squidRelatedTeleportPacket, true);
     }

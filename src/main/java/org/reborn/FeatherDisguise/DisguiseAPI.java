@@ -75,6 +75,7 @@ public class DisguiseAPI implements ITeardown {
 
             if (disguiseHittableData == null) {disguiseHittableData = new Int2IntOpenHashMap();}
             disguiseHittableData.put(disguise.getRelatedEntitiesWrapper().getHittableSquidEntity().getVirtualID(), player.getEntityId());
+            disguiseHittableData.put(disguise.getRelatedEntitiesWrapper().getBaseDisguiseEntity().getVirtualID(), player.getEntityId());
 
         } catch (Exception ex) {
             log.warn("Failed to dry-generate new disguise instance for player ({})", player.getName(), ex);
@@ -110,6 +111,7 @@ public class DisguiseAPI implements ITeardown {
         // remove any hittable related entityID data
         if (disguiseHittableData != null) {
             disguiseHittableData.remove(disguise.getRelatedEntitiesWrapper().getHittableSquidEntity().getVirtualID());
+            disguiseHittableData.remove(disguise.getRelatedEntitiesWrapper().getBaseDisguiseEntity().getVirtualID());
         }
 
         // now finally remove them from the main disguise data (should probably assert but whatever this is safer)

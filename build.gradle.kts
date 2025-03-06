@@ -6,7 +6,7 @@ plugins {
 
 // --> packaging
 group = "org.reborn"
-version = "1.0"
+version = "1.0.0"
 description = "A lightweight non-bullshit ssm disguise plugin"
 
 // --> version control
@@ -38,8 +38,10 @@ dependencies {
 // --> building
 tasks.compileJava { options.encoding = "UTF-8" }
 tasks.javadoc { options.encoding = "UTF-8" }
-tasks.shadowJar { archiveFileName = "FeatherDisguise.jar" }
+tasks.shadowJar { archiveFileName = "FeatherDisguise-plugin.jar" }
 tasks.processResources { include("plugin.yml") }
 tasks.build {
     dependsOn(tasks.processResources)
+    dependsOn(tasks.shadowJar)
+    // todo shading the jar makes it massive, am i doing this right? can we reduce the file size somehow?
 }

@@ -42,21 +42,12 @@ public class DisguiseUtil {
         final float volume = disguise.getDisguiseBaseSoundVolume() + (float) (0.5f * Math.random());
         final float pitch = disguise.getDisguiseBaseSoundPitch() + (float) (0.4f * Math.random());
 
-        if (!deathSound) {
-            if (disguise.getDisguiseHurtSoundString() != null) {
-                ((CraftWorld) location.getWorld()).getHandle().makeSound(
-                        location.getX(), location.getY(), location.getZ(),
-                        disguise.getDisguiseHurtSoundString(), volume, pitch);
-            }
-        }
+        final String soundString = !deathSound ? disguise.getDisguiseHurtSoundString() : disguise.getDisguiseDeathSoundString();
+        if (soundString == null) return;
 
-        else {
-            if (disguise.getDisguiseDeathSoundString() != null) {
-                ((CraftWorld) location.getWorld()).getHandle().makeSound(
-                        location.getX(), location.getY(), location.getZ(),
-                        disguise.getDisguiseDeathSoundString(), volume, pitch);
-            }
-        }
+        ((CraftWorld) location.getWorld()).getHandle().makeSound(
+                location.getX(), location.getY(), location.getZ(),
+                soundString, volume, pitch);
     }
 
     /** @return List of {@link Player} within the {@link org.bukkit.World}. **/
@@ -131,7 +122,7 @@ public class DisguiseUtil {
             case ENTITY_METADATA:
             case ENTITY_VELOCITY:
             case SPAWN_PLAYER:
-            case DESTROY_ENTITIES:
+            //case DESTROY_ENTITIES:
                 return true;
         }
     }
@@ -164,8 +155,8 @@ public class DisguiseUtil {
                 return new WrapperPlayServerEntityVelocity(e);
             case SPAWN_PLAYER:
                 return new WrapperPlayServerSpawnPlayer(e);
-            case DESTROY_ENTITIES:
-                return new WrapperPlayServerDestroyEntities(e);
+//            case DESTROY_ENTITIES:
+//                return new WrapperPlayServerDestroyEntities(e);
         }
     }
 
@@ -200,8 +191,8 @@ public class DisguiseUtil {
                 return ((WrapperPlayServerEntityVelocity) packetWrapper).getEntityId();
             case SPAWN_PLAYER:
                 return ((WrapperPlayServerSpawnPlayer) packetWrapper).getEntityId();
-            case DESTROY_ENTITIES:
-                return ((WrapperPlayServerDestroyEntities) packetWrapper).getEntityIds()[0];
+//            case DESTROY_ENTITIES:
+//                return ((WrapperPlayServerDestroyEntities) packetWrapper).getEntityIds()[0];
         }
     }
 

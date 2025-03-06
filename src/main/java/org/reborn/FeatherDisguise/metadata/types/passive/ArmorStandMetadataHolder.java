@@ -19,6 +19,7 @@ public class ArmorStandMetadataHolder extends LivingEntityMetadataHolder<EntityT
     @Override
     protected void constructDefaultMetadata() {
         super.constructDefaultMetadata();
+        this.removeIndex((byte) 15); // LivingEntityBase within the NMS uses this for "AI", but armor-stands don't have AI. to avoid client crashes, always remove this index
         this.setMask((byte) EntityMetadataIndexes.ARMOR_STAND_GENERIC, (byte) 0); // makes the bitmask 0, which is the default for armorstand entities
         this.setHeadRotation(this.getHeadRotation());
         this.setBodyRotation(this.getBodyRotation());
@@ -104,7 +105,7 @@ public class ArmorStandMetadataHolder extends LivingEntityMetadataHolder<EntityT
         return this.getIndex((byte) EntityMetadataIndexes.ARMOR_STAND_LEFT_LEG_POSITION, new Vector3f(-1.0f, 0f, -1.0f));
     }
 
-    public void setLeftLegRotation(@NotNull Vector3f leftLegRotation) { // todo for some reason this is throwing a massive error???
+    public void setLeftLegRotation(@NotNull Vector3f leftLegRotation) {
         this.setIndex((byte) EntityMetadataIndexes.ARMOR_STAND_LEFT_LEG_POSITION, EntityDataTypes.ROTATION, leftLegRotation);
     }
 
