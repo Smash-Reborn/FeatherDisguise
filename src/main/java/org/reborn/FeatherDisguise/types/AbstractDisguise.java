@@ -1,6 +1,7 @@
 package org.reborn.FeatherDisguise.types;
 
 import com.github.retrooper.packetevents.util.Vector3d;
+import com.github.retrooper.packetevents.wrapper.PacketWrapper;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.log4j.Log4j2;
@@ -18,6 +19,7 @@ import org.reborn.FeatherDisguise.util.EntityEquipmentHandler;
 import org.reborn.FeatherDisguise.wrapper.DisguiseRelatedEntityWrapper;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Optional;
 
 @Log4j2
@@ -29,7 +31,7 @@ public class AbstractDisguise<E extends AbstractMetadataHolder<?>> {
 
     @Getter @NotNull private final DisguiseRelatedEntityWrapper<E> relatedEntitiesWrapper;
 
-    @Getter @Setter @NotNull private String disguiseNametag;
+    @Getter @NotNull private String disguiseNametag;
 
     @Getter @Setter private boolean headRotationYawLocked = false;
 
@@ -82,6 +84,12 @@ public class AbstractDisguise<E extends AbstractMetadataHolder<?>> {
         return 0.8f;
     }
 
+    public void setDisguiseNametag(@Nullable String nametag) {
+        if (nametag == null) return;
+        this.disguiseNametag = nametag;
+        this.getRelatedEntitiesWrapper().getNametagArmorStandEntity().getMetadataHolder().setCustomName(this.disguiseNametag);
+    }
+
     @NotNull public Optional<EntityEquipmentHandler> getEquipmentHandler() {
 
         // only certain disguises are able to render items in slots.
@@ -110,5 +118,9 @@ public class AbstractDisguise<E extends AbstractMetadataHolder<?>> {
 
     protected void recalculateSquidEntityYPosModifier() {
         this.precalculatedSquidEntityYPosModifier = (float) ((this.cachedEntityDimensions.getHeight() * 0.65d /*0.75*/) + this.getSquidRelatedEntityYOffset());
+    }
+
+    @Nullable public List<PacketWrapper<?>> extraPacketsToProvideDuringEntitySpawning() {
+        return null;
     }
 }

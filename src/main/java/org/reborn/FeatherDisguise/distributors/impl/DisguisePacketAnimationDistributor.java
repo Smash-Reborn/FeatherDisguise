@@ -3,14 +3,16 @@ package org.reborn.FeatherDisguise.distributors.impl;
 import com.github.retrooper.packetevents.event.simple.PacketPlaySendEvent;
 import com.github.retrooper.packetevents.wrapper.PacketWrapper;
 import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerEntityAnimation;
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
+import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 import org.reborn.FeatherDisguise.distributors.DisguiseListenerDistributor;
 import org.reborn.FeatherDisguise.distributors.IDisguisePacketDistributor;
 import org.reborn.FeatherDisguise.types.AbstractDisguise;
 import org.reborn.FeatherDisguise.util.DisguiseUtil;
 
-/** Handles client-bound arm swing animations for disguises.
+/** Handles client-bound arm swing/hurt animations for disguises.
  * Relative NMS packet is {@link net.minecraft.server.v1_8_R3.PacketPlayOutAnimation}.
  * **/
 public class DisguisePacketAnimationDistributor implements IDisguisePacketDistributor {
@@ -22,15 +24,28 @@ public class DisguisePacketAnimationDistributor implements IDisguisePacketDistri
         if (!(interceptedPacket instanceof WrapperPlayServerEntityAnimation)) return;
         final WrapperPlayServerEntityAnimation animationPacket = (WrapperPlayServerEntityAnimation) interceptedPacket;
 
-        if (!DisguiseUtil.isDisguiseAbleToRenderHandArmSwings(disguise.getDisguiseType()) || disguise.getViewingPlayerIDsMarkedAsHidden().contains(observer.getEntityId())) {
-            packetSendEvent.setCancelled(true); // they have a disguise, but it can't render arm swings OR they are marked as hidden for the observer
+        // if the disguise is flagged as "hidden" for the observing player, why would we bother sending them packets, just early exit
+        if (disguise.getViewingPlayerIDsMarkedAsHidden().contains(observer.getEntityId())) {
+            packetSendEvent.setCancelled(true);
             return;
         }
 
-        if (animationPacket.getType() != WrapperPlayServerEntityAnimation.EntityAnimationType.SWING_MAIN_ARM) return; // does this really matter for 1.8 or packetevents? idk
+        if (!allowedAnimationTypes(animationPacket.getType())) return; // only handle ARM_SWING or HURT_ANIMATION
+
+        if (animationPacket.getType() == WrapperPlayServerEntityAnimation.EntityAnimationType.SWING_MAIN_ARM) {
+            if (!DisguiseUtil.isDisguiseAbleToRenderHandArmSwings(disguise.getDisguiseType())) {
+                packetSendEvent.setCancelled(true); // they have a disguise, but it can't render arm swings
+                return; // get cucked
+            }
+        }
 
         // make the base disguise entity (the thing player see) swing its arm
         animationPacket.setEntityId(disguise.getRelatedEntitiesWrapper().getBaseDisguiseEntity().getVirtualID());
         packetSendEvent.markForReEncode(true);
+    }
+
+    @ApiStatus.Internal
+    private boolean allowedAnimationTypes(WrapperPlayServerEntityAnimation.EntityAnimationType animationType) {
+        return animationType == WrapperPlayServerEntityAnimation.EntityAnimationType.SWING_MAIN_ARM || animationType == WrapperPlayServerEntityAnimation.EntityAnimationType.HURT;
     }
 }

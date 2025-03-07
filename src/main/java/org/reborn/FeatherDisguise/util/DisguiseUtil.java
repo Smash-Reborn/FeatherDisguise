@@ -124,6 +124,7 @@ public class DisguiseUtil {
             case ENTITY_EQUIPMENT:
             case ENTITY_METADATA:
             case ENTITY_VELOCITY:
+            case ATTACH_ENTITY:
             case SPAWN_PLAYER:
             case DESTROY_ENTITIES:
                 return true;
@@ -156,6 +157,8 @@ public class DisguiseUtil {
                 return new WrapperPlayServerEntityMetadata(e);
             case ENTITY_VELOCITY:
                 return new WrapperPlayServerEntityVelocity(e);
+            case ATTACH_ENTITY:
+                return new WrapperPlayServerAttachEntity(e);
             case SPAWN_PLAYER:
                 return new WrapperPlayServerSpawnPlayer(e);
             case DESTROY_ENTITIES:
@@ -192,6 +195,8 @@ public class DisguiseUtil {
                 return ((WrapperPlayServerEntityMetadata) packetWrapper).getEntityId();
             case ENTITY_VELOCITY:
                 return ((WrapperPlayServerEntityVelocity) packetWrapper).getEntityId();
+            case ATTACH_ENTITY:
+                return ((WrapperPlayServerAttachEntity) packetWrapper).getHoldingId();
             case SPAWN_PLAYER:
                 return ((WrapperPlayServerSpawnPlayer) packetWrapper).getEntityId();
             case DESTROY_ENTITIES:

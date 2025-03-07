@@ -81,6 +81,9 @@ public class DisguiseListenerDistributor implements ITeardown, Listener {
             case ENTITY_VELOCITY:
                 distributorType = DisguisePacketDistributorType.VELOCITY;
                 break;
+            case ATTACH_ENTITY:
+                distributorType = DisguisePacketDistributorType.ATTACH_RIDING_OR_LEASH;
+                break;
             case SPAWN_PLAYER:
                 distributorType = DisguisePacketDistributorType.SPAWNING_PLAYER;
                 break;
@@ -104,7 +107,7 @@ public class DisguiseListenerDistributor implements ITeardown, Listener {
 
     @ApiStatus.Internal
     private void initializePacketDistributors() {
-        this.disguisePacketDistributors = new HashMap<>(9);
+        this.disguisePacketDistributors = new HashMap<>(10);
         this.disguisePacketDistributors.put(DisguisePacketDistributorType.RELATIVE_POSITION_ROTATION, new DisguisePacketPosRotDistributor());
         this.disguisePacketDistributors.put(DisguisePacketDistributorType.TELEPORT_POSITION_ROTATION, new DisguisePacketTeleportDistributor());
         this.disguisePacketDistributors.put(DisguisePacketDistributorType.HEAD_ROTATION, new DisguisePacketHeadRotDistributor());
@@ -112,6 +115,7 @@ public class DisguiseListenerDistributor implements ITeardown, Listener {
         this.disguisePacketDistributors.put(DisguisePacketDistributorType.ANIMATION, new DisguisePacketAnimationDistributor());
         this.disguisePacketDistributors.put(DisguisePacketDistributorType.EQUIPMENT, new DisguisePacketEquipmentDistributor());
         this.disguisePacketDistributors.put(DisguisePacketDistributorType.METADATA, new DisguisePacketMetadataDistributor());
+        this.disguisePacketDistributors.put(DisguisePacketDistributorType.ATTACH_RIDING_OR_LEASH, new DisguisePacketAttachDistributor());
         this.disguisePacketDistributors.put(DisguisePacketDistributorType.SPAWNING_PLAYER, new DisguisePacketSpawnDistributor());
         this.disguisePacketDistributors.put(DisguisePacketDistributorType.DESTROY_PLAYER, new DisguisePacketDestroyDistributor());
     }

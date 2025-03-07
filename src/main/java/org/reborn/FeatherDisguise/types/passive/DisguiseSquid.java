@@ -25,6 +25,6 @@ public class DisguiseSquid extends AbstractDisguise<LivingEntityMetadataHolder<E
     }
 
     public float getDisguiseBaseSoundPitch() {
-        return 1.52f;
+        return 1.54f;
     }
 }

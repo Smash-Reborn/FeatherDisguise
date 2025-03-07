@@ -71,7 +71,8 @@ public class DisguiseRelatedEntityWrapper<E extends AbstractMetadataHolder<?>> {
 
     @NotNull public Optional<List<PacketWrapper<?>>> generateSpawningPacketsForAllDisguiseRelatedEntities() {
         final Location disguisedPlayerCurrentPosRot = this.owningDisguise.getOwningBukkitPlayer().getLocation().clone();
-        final List<PacketWrapper<?>> spawningPackets = new ArrayList<>(7);
+        final List<PacketWrapper<?>> extraPackets = this.owningDisguise.extraPacketsToProvideDuringEntitySpawning();
+        final List<PacketWrapper<?>> spawningPackets = new ArrayList<>(extraPackets == null ? 7 : extraPackets.size() + 7);
         // base disguise spawn
         // base disguise head rotation
         // base disguise equipment
@@ -110,6 +111,10 @@ public class DisguiseRelatedEntityWrapper<E extends AbstractMetadataHolder<?>> {
                     Collections.singletonList(
                             new Equipment(EquipmentSlot.MAIN_HAND,
                                     SpigotConversionUtil.fromBukkitItemStack(this.owningDisguise.getOwningBukkitPlayer().getItemInHand())))));
+        }
+
+        if (extraPackets != null) {
+            spawningPackets.addAll(extraPackets); // some entities might need to send something extra, we can @ Override and do so here
         }
 
         optDisguiseEntityDependentMetadata = this.hittableSquidEntity.getMetadataHolder().getConstructedListOfMetadata();

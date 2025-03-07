@@ -9,6 +9,7 @@ public enum DisguisePacketDistributorType {
     EQUIPMENT,
     METADATA,
     VELOCITY,
+    ATTACH_RIDING_OR_LEASH,
     SPAWNING_PLAYER,
     DESTROY_PLAYER,
 

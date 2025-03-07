@@ -3,6 +3,5 @@
 
 
  ## bugs:
- - distributor for handling passenger (when spigot attempts to add an entity on player head, instead put it on disguise head)
+ - when removing the player, tab-bar info doesn't stay in the world for the client, need to add it back somehow
  - finish documentation
- - add to legacy and hook up code, make sure all works correctly

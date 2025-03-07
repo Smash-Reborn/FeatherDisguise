@@ -37,16 +37,20 @@ public class DisguiseAPI implements ITeardown {
     /** Takes the {@link Player} in the constructor and disguises them as
      * the supplied {@link DisguiseType} entity.
      * @apiNote
-     * The method will call {@link #generateDisguise(Player, DisguiseType)} initially
+     * The method will call {@link #generateDisguise(Player, DisguiseType, String)} initially
      * to try and generate all relevant data for both the class and the player. If this
      * method returns {@code false}, the {@code disguise} itself will not construct and
      * the method will abort.
      * **/
-    public void disguisePlayerAsEntity(@NotNull Player player, @NotNull DisguiseType disguiseType) {
-        final boolean successfullyGeneratedDisguiseData = this.generateDisguise(player, disguiseType);
+    public void disguisePlayerAsEntity(@NotNull Player player, @NotNull DisguiseType disguiseType, @Nullable String nametagText) {
+        final boolean successfullyGeneratedDisguiseData = this.generateDisguise(player, disguiseType, nametagText);
         if (!successfullyGeneratedDisguiseData) return;
         this.showDisguiseForPlayersInWorld(player);
         this.checkAndGeneratePacketHandlers();
+    }
+
+    public void disguisePlayerAsEntity(@NotNull Player player, @NotNull DisguiseType disguiseType) {
+        this.disguisePlayerAsEntity(player, disguiseType, null);
     }
 
     /** Takes the {@link Player} in the constructor and <b>silently</b> generates new
@@ -58,7 +62,7 @@ public class DisguiseAPI implements ITeardown {
      * If this method fails, the method will abort and return {@code false}. The only time this
      * method might potentially fail is when calling {@link #removeDisguise(Player, boolean)}.
      * **/
-    public boolean generateDisguise(@NotNull Player player, @NotNull DisguiseType disguiseType) {
+    public boolean generateDisguise(@NotNull Player player, @NotNull DisguiseType disguiseType, @Nullable String nametagText) {
         try {
 
             final Optional<AbstractDisguise<?>> optDisguise = disguiseType.generateDisguiseObjectFromType(player);
@@ -70,6 +74,7 @@ public class DisguiseAPI implements ITeardown {
             this.removeDisguise(player, false); // just in case, clear any existing disguise
 
             final AbstractDisguise<?> disguise = optDisguise.get();
+            if (nametagText != null) {disguise.setDisguiseNametag(nametagText);}
             if (activeDisguiseData == null) {activeDisguiseData = new Int2ObjectOpenHashMap<>();}
             activeDisguiseData.put(player.getEntityId(), disguise);
 
@@ -83,6 +88,10 @@ public class DisguiseAPI implements ITeardown {
         }
 
         return true;
+    }
+
+    public boolean generateDisguise(@NotNull Player player, @NotNull DisguiseType disguiseType) {
+        return this.generateDisguise(player, disguiseType, null);
     }
 
     /** Takes the {@link Player} in the constructor and attempts to remove
@@ -295,6 +304,13 @@ public class DisguiseAPI implements ITeardown {
             this.hideDisguiseForPlayer(disguise, observer, false);
             this.showDisguiseForPlayer(disguise, observer);
         }
+    }
+
+    @SuppressWarnings("unchecked")
+    @NotNull public <T extends AbstractDisguise<?>> Optional<T> getPlayerDisguise(@NotNull Player player, @NotNull final Class<T> disClass) {
+        final Optional<AbstractDisguise<?>> optDisguise = this.getPlayerDisguise(player);
+        if (!optDisguise.isPresent() || !disClass.equals(optDisguise.get().getClass())) return Optional.empty();
+        return Optional.of((T) optDisguise.get()); // stop being a bitch, we already checked this above
     }
 
     /** @return {@link Optional} {@link AbstractDisguise} that is currently active
