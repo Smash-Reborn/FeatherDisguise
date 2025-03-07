@@ -22,28 +22,20 @@ public class AbstractGuardianMetadataHolder<E extends EntityType<?>> extends Liv
         this.setTargetID(null);
     }
 
-    @ApiStatus.Internal
-    private int getInternalGuardianFlagID() {
-        return this.getIndex((byte) EntityMetadataIndexes.GUARDIAN_GENERIC, 0);
-    }
-
-    @ApiStatus.Internal
-    private void setGuardianFlag(@NotNull GuardianEntityBitMaskType bitType, boolean flag) {
-        int i = this.getInternalGuardianFlagID();
-        i = flag ? i | bitType.getBitValue() : i & ~bitType.getBitValue();
-        this.setIndex((byte) EntityMetadataIndexes.GUARDIAN_GENERIC, EntityDataTypes.INT, i);
+    public boolean isElder() {
+        return this.getInternalGuardianMaskBit(GuardianEntityBitMaskType.IS_ELDER.getBitValue());
     }
 
     public void setElder(boolean isElder) {
-        this.setGuardianFlag(GuardianEntityBitMaskType.IS_ELDER, isElder);
+        this.setInternalGuardianFlag(GuardianEntityBitMaskType.IS_ELDER, isElder);
     }
 
     public void setRetractingSpikes(boolean isRetracting) {
-        this.setGuardianFlag(GuardianEntityBitMaskType.IS_RETRACTING_SPIKES, isRetracting);
+        this.setInternalGuardianFlag(GuardianEntityBitMaskType.IS_RETRACTING_SPIKES, isRetracting);
     }
 
     public void resetGuardianFlag() {
-        this.setIndex((byte )EntityMetadataIndexes.GUARDIAN_GENERIC, EntityDataTypes.INT, 0);
+        this.setIndex((byte) EntityMetadataIndexes.GUARDIAN_GENERIC, EntityDataTypes.INT, 0);
     }
 
     public int getTargetID() {
@@ -58,10 +50,32 @@ public class AbstractGuardianMetadataHolder<E extends EntityType<?>> extends Liv
         this.setIndex((byte) EntityMetadataIndexes.GUARDIAN_TARGET_ENTITY, EntityDataTypes.INT, targetID != null ? targetID : 0);
     }
 
+    @ApiStatus.Internal
+    private int getInternalGuardianFlag() {
+        return this.getIndex((byte) EntityMetadataIndexes.GUARDIAN_GENERIC, 0);
+    }
+
+    @ApiStatus.Internal
+    private boolean getInternalGuardianMaskBit(int bit) {
+        return (this.getInternalGuardianFlag() & bit) != 0;
+    }
+
+    @ApiStatus.Internal
+    private void setInternalGuardianFlag(@NotNull GuardianEntityBitMaskType bitType, boolean flag) {
+        int i = this.getInternalGuardianFlag();
+        final boolean currentValue = (i & bitType.getBitValue()) == bitType.getBitValue();
+        if (currentValue == flag) return;
+
+        if (flag) i |= bitType.getBitValue();
+        else i &= ~bitType.getBitValue();
+
+        this.setIndex((byte) EntityMetadataIndexes.GUARDIAN_GENERIC, EntityDataTypes.INT, i);
+    }
+
     @Getter @AllArgsConstructor
     public enum GuardianEntityBitMaskType {
-        IS_ELDER(2),
-        IS_RETRACTING_SPIKES(4);
+        IS_RETRACTING_SPIKES(2),
+        IS_ELDER(4);
 
         private final int bitValue;
     }

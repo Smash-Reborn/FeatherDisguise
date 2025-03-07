@@ -25,11 +25,14 @@ public class WolfMetadataHolder extends TameableEntityMetadataHolder<EntityType<
     }
 
     public boolean isAngry() {
-        return this.getMaskBit((byte) EntityMetadataIndexes.TAMEABLE_ENTITY_GENERIC, (byte) 0x02);
+        return (this.getIndex((byte) EntityMetadataIndexes.TAMEABLE_ENTITY_GENERIC, (byte) 0) & 2) != 0;
     }
 
     public void setAngry(boolean isMad) {
-        this.setMaskBit(EntityMetadataIndexes.TAMEABLE_ENTITY_GENERIC, (byte) 0x02, isMad);
+        byte b = this.getMask((byte) EntityMetadataIndexes.TAMEABLE_ENTITY_GENERIC);
+        if (isMad) b = (byte) (b | 2);
+        else b = (byte) (b & -3);
+        this.setMask((byte) EntityMetadataIndexes.TAMEABLE_ENTITY_GENERIC, b);
     }
 
     public float getWolfHealth() {

@@ -8,6 +8,7 @@ import com.github.retrooper.packetevents.wrapper.PacketWrapper;
 import com.github.retrooper.packetevents.wrapper.play.server.*;
 import io.github.retrooper.packetevents.util.SpigotConversionUtil;
 import lombok.Getter;
+import lombok.extern.log4j.Log4j2;
 import net.minecraft.server.v1_8_R3.*;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -16,19 +17,20 @@ import org.bukkit.craftbukkit.v1_8_R3.entity.CraftPlayer;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 import org.reborn.FeatherDisguise.metadata.types.AbstractMetadataHolder;
-import org.reborn.FeatherDisguise.metadata.EntityDimensions;
 import org.reborn.FeatherDisguise.metadata.EntityType;
 import org.reborn.FeatherDisguise.metadata.modal.LivingEntityMetadataHolder;
 import org.reborn.FeatherDisguise.metadata.types.passive.ArmorStandMetadataHolder;
 import org.reborn.FeatherDisguise.metadata.types.neutral.PlayerMetadataHolder;
 import org.reborn.FeatherDisguise.types.AbstractDisguise;
 import org.reborn.FeatherDisguise.util.DisguiseUtil;
+import org.reborn.FeatherDisguise.util.PacketUtil;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
+@Log4j2
 public class DisguiseRelatedEntityWrapper<E extends AbstractMetadataHolder<?>> {
 
     @NotNull private final AbstractDisguise<?> owningDisguise;
@@ -56,10 +58,10 @@ public class DisguiseRelatedEntityWrapper<E extends AbstractMetadataHolder<?>> {
     private void modifyRelatedEntitiesAndPrepareForSpawning() {
 
         // squid which is hittable, appears on the top position of all disguises
-        this.hittableSquidEntity.getMetadataHolder().setInvisible(false);
+        this.hittableSquidEntity.getMetadataHolder().setInvisible(true);
 
         // armor-stand which displays the name-tag for the disguise owner
-        this.nametagArmorStandEntity.getMetadataHolder().setInvisible(false);
+        this.nametagArmorStandEntity.getMetadataHolder().setInvisible(true);
         this.nametagArmorStandEntity.getMetadataHolder().setMarker(true);
         this.nametagArmorStandEntity.getMetadataHolder().setRemovedBaseplate(true);
         this.nametagArmorStandEntity.getMetadataHolder().setSmall(true);
@@ -69,8 +71,9 @@ public class DisguiseRelatedEntityWrapper<E extends AbstractMetadataHolder<?>> {
 
     @NotNull public Optional<List<PacketWrapper<?>>> generateSpawningPacketsForAllDisguiseRelatedEntities() {
         final Location disguisedPlayerCurrentPosRot = this.owningDisguise.getOwningBukkitPlayer().getLocation().clone();
-        final List<PacketWrapper<?>> spawningPackets = new ArrayList<>(6);
+        final List<PacketWrapper<?>> spawningPackets = new ArrayList<>(7);
         // base disguise spawn
+        // base disguise head rotation
         // base disguise equipment
         // squid entity spawn
         // armor-stand entity spawn
@@ -94,6 +97,11 @@ public class DisguiseRelatedEntityWrapper<E extends AbstractMetadataHolder<?>> {
                         this.owningDisguise.getOwningBukkitPlayer().getVelocity().getY(),
                         this.owningDisguise.getOwningBukkitPlayer().getVelocity().getZ()),
                 optDisguiseEntityDependentMetadata.get()));
+
+        // need to send an extra head rotation packet to make sure the head is correctly positioned when viewing clients see the disguise for the first time
+        spawningPackets.add(new WrapperPlayServerEntityHeadLook(
+                this.baseDisguiseEntity.getVirtualID(),
+                this.owningDisguise.isHeadRotationYawLocked() ? 0f : disguisedPlayerCurrentPosRot.getYaw()));
 
         // send an equipment packet for the hand slot if the player is holding an item & the disguise is allowed to show items in the hand
         if (DisguiseUtil.isDisguiseAbleToRenderItemsInHandSlots(this.owningDisguise.getDisguiseType()) &&
@@ -174,8 +182,18 @@ public class DisguiseRelatedEntityWrapper<E extends AbstractMetadataHolder<?>> {
         return new WrapperPlayServerDestroyEntities(this.owningDisguise.getOwningBukkitPlayer().getEntityId());
     }
 
-    @NotNull public EntityDimensions getBaseDisguiseDimensions() {
-        return this.baseDisguiseEntity.getMetadataHolder().getEntityType().getEntityDimensions();
+    public void sendUpdateMetadataForBaseDisguiseEntityToAllViewingPlayers() {
+        final Optional<List<EntityData>> optMetadata = this.baseDisguiseEntity.getMetadataHolder().getConstructedListOfMetadata();
+        if (!optMetadata.isPresent()) {
+            log.warn("Unable to construct metadata packet for base disguise entity ({}) for ({}). Aborting sending metadata packet",
+                    this.owningDisguise.getDisguiseType(), this.owningDisguise.getOwningBukkitPlayer().getName());
+            return; // abandon ship boys, we r fucked
+        }
+
+        final WrapperPlayServerEntityMetadata metadataPacket = new WrapperPlayServerEntityMetadata(
+                this.baseDisguiseEntity.getVirtualID(), optMetadata.get());
+        DisguiseUtil.getPlayersInWorldExcluding(this.owningDisguise.getOwningBukkitPlayer())
+                .forEach(viewer -> PacketUtil.sendPacketEventsPacket(viewer, metadataPacket, true));
     }
 
 }

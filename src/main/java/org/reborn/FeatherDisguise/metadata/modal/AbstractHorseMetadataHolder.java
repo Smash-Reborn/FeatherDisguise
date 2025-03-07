@@ -22,7 +22,7 @@ public class AbstractHorseMetadataHolder<E extends EntityType<?>> extends AgedEn
     @Override
     protected void constructDefaultMetadata() {
         super.constructDefaultMetadata();
-        this.setMask((byte) EntityMetadataIndexes.HORSE_GENERIC, (byte) 0); // makes the bitmask 0, which is the default for horse entities
+        this.setIndex((byte) EntityMetadataIndexes.HORSE_GENERIC, EntityDataTypes.INT, 0); // makes the value 0, which is the default for horse entities
         this.setHorseType(this.getHorseType());
         this.setHorseColorStyleID(this.getInternalHorseColorStyleID());
         this.setOwnerName("");
@@ -30,59 +30,59 @@ public class AbstractHorseMetadataHolder<E extends EntityType<?>> extends AgedEn
     }
 
     public boolean isTamed() {
-        return this.getMaskBit((byte) EntityMetadataIndexes.HORSE_GENERIC, HorseEntityBitMaskType.IS_TAME.getBitValue());
+        return this.getHorseMaskBit(HorseEntityBitMaskType.IS_TAME.getBitID());
     }
 
     public void setTamed(boolean isTamed) {
-        this.setMaskBit(EntityMetadataIndexes.HORSE_GENERIC, HorseEntityBitMaskType.IS_TAME.getBitValue(), isTamed);
+        this.setHorseMaskBit(HorseEntityBitMaskType.IS_TAME.getBitID(), isTamed);
     }
 
     public boolean hasSaddle() {
-        return this.getMaskBit((byte) EntityMetadataIndexes.HORSE_GENERIC, HorseEntityBitMaskType.HAS_SADDLE.getBitValue());
+        return this.getHorseMaskBit(HorseEntityBitMaskType.HAS_SADDLE.getBitID());
     }
 
     public void setSaddled(boolean isSaddled) {
-        this.setMaskBit(EntityMetadataIndexes.HORSE_GENERIC, HorseEntityBitMaskType.HAS_SADDLE.getBitValue(), isSaddled);
+        this.setHorseMaskBit(HorseEntityBitMaskType.HAS_SADDLE.getBitID(), isSaddled);
     }
 
     public boolean hasChest() {
-        return this.getMaskBit((byte) EntityMetadataIndexes.HORSE_GENERIC, HorseEntityBitMaskType.HAS_CHEST.getBitValue());
+        return this.getHorseMaskBit(HorseEntityBitMaskType.HAS_CHEST.getBitID());
     }
 
     public void setHasChest(boolean hasChest) {
-        this.setMaskBit(EntityMetadataIndexes.HORSE_GENERIC, HorseEntityBitMaskType.HAS_CHEST.getBitValue(), hasChest);
+        this.setHorseMaskBit(HorseEntityBitMaskType.HAS_CHEST.getBitID(), hasChest);
     }
 
     public boolean hasHadSexualIntercourse() {
-        return this.getMaskBit((byte) EntityMetadataIndexes.HORSE_GENERIC, HorseEntityBitMaskType.HAS_HAD_SEX.getBitValue());
+        return this.getHorseMaskBit(HorseEntityBitMaskType.HAS_HAD_SEX.getBitID());
     }
 
     public void setHavingSex(boolean isSexing) {
-        this.setMaskBit(EntityMetadataIndexes.HORSE_GENERIC, HorseEntityBitMaskType.HAS_HAD_SEX.getBitValue(), isSexing);
+        this.setHorseMaskBit(HorseEntityBitMaskType.HAS_HAD_SEX.getBitID(), isSexing);
     }
 
     public boolean isEating() {
-        return this.getMaskBit((byte) EntityMetadataIndexes.HORSE_GENERIC, HorseEntityBitMaskType.IS_EATING.getBitValue());
+        return this.getHorseMaskBit(HorseEntityBitMaskType.IS_EATING.getBitID());
     }
 
     public void setEating(boolean isEating) {
-        this.setMaskBit(EntityMetadataIndexes.HORSE_GENERIC, HorseEntityBitMaskType.IS_EATING.getBitValue(), isEating);
+        this.setHorseMaskBit(HorseEntityBitMaskType.IS_EATING.getBitID(), isEating);
     }
 
     public boolean isRearing() {
-        return this.getMaskBit((byte) EntityMetadataIndexes.HORSE_GENERIC, HorseEntityBitMaskType.IS_REARING.getBitValue());
+        return this.getHorseMaskBit(HorseEntityBitMaskType.IS_REARING.getBitID());
     }
 
     public void setRearing(boolean isRearing) {
-        this.setMaskBit(EntityMetadataIndexes.HORSE_GENERIC, HorseEntityBitMaskType.IS_REARING.getBitValue(), isRearing);
+        this.setHorseMaskBit(HorseEntityBitMaskType.IS_REARING.getBitID(), isRearing);
     }
 
     public boolean isMouthOpen() {
-        return this.getMaskBit((byte) EntityMetadataIndexes.HORSE_GENERIC, HorseEntityBitMaskType.IS_MOUTH_OPEN.getBitValue());
+        return this.getHorseMaskBit(HorseEntityBitMaskType.IS_MOUTH_OPEN.getBitID());
     }
 
     public void setMouthOpen(boolean isMouthOpen) {
-        this.setMaskBit(EntityMetadataIndexes.HORSE_GENERIC, HorseEntityBitMaskType.IS_MOUTH_OPEN.getBitValue(), isMouthOpen);
+        this.setHorseMaskBit(HorseEntityBitMaskType.IS_MOUTH_OPEN.getBitID(), isMouthOpen);
     }
 
     @ApiStatus.Internal
@@ -135,6 +135,23 @@ public class AbstractHorseMetadataHolder<E extends EntityType<?>> extends AgedEn
         this.setIndex((byte) EntityMetadataIndexes.HORSE_ARMOR_TYPE, EntityDataTypes.INT, armorType.ordinal());
     }
 
+    @ApiStatus.Internal
+    private boolean getHorseMaskBit(int bit) {
+        return (this.getIndex((byte) EntityMetadataIndexes.HORSE_GENERIC, 0) & bit) != 0;
+    }
+
+    @ApiStatus.Internal
+    private void setHorseMaskBit(int bit, boolean value) {
+        int mask = this.getIndex((byte) EntityMetadataIndexes.HORSE_GENERIC, 0); // horses use integers LOL
+        final boolean currentValue = (mask & bit) == bit;
+        if (currentValue == value) return;
+
+        if (value) mask |= bit;
+        else mask &= ~bit;
+
+        this.setIndex((byte) EntityMetadataIndexes.HORSE_GENERIC, EntityDataTypes.INT, mask);
+    }
+
     @NoArgsConstructor
     public enum HorseEntityArmorType {
         NONE,
@@ -145,16 +162,16 @@ public class AbstractHorseMetadataHolder<E extends EntityType<?>> extends AgedEn
 
     @Getter @AllArgsConstructor
     public enum HorseEntityBitMaskType {
-        IS_TAME((byte) 0x02),
-        HAS_SADDLE((byte) 0x04),
-        HAS_CHEST((byte) 0x08),
-        HAS_HAD_SEX((byte) 0x10),
-        IS_EATING((byte) 0x20),
-        IS_REARING((byte) 0x40),
-        IS_MOUTH_OPEN((byte) 0x80);
+        IS_TAME(2),
+        HAS_SADDLE(4),
+        HAS_CHEST(8),
+        HAS_HAD_SEX(16),
+        IS_EATING(32),
+        IS_REARING(64),
+        IS_MOUTH_OPEN(128);
         // taken from EntityHorse.class (nms)
 
-        private final byte bitValue;
+        private final int bitID;
     }
 
 }

@@ -68,6 +68,7 @@ public class DisguiseUtil {
             case WITHER_SKELETON:
             case ZOMBIE:
             case ZOMBIE_VILLAGER:
+            case ZOMBIE_PIGMAN:
                 return true;
         }
     }
@@ -82,6 +83,7 @@ public class DisguiseUtil {
             case WITHER_SKELETON:
             case ZOMBIE:
             case ZOMBIE_VILLAGER:
+            case ZOMBIE_PIGMAN:
                 return true;
         }
     }
@@ -103,6 +105,7 @@ public class DisguiseUtil {
             case GIANT:
             case WITHER_SKELETON:
             case ZOMBIE_VILLAGER:
+            case ZOMBIE_PIGMAN:
                 return true;
         }
     }
@@ -122,7 +125,7 @@ public class DisguiseUtil {
             case ENTITY_METADATA:
             case ENTITY_VELOCITY:
             case SPAWN_PLAYER:
-            //case DESTROY_ENTITIES:
+            case DESTROY_ENTITIES:
                 return true;
         }
     }
@@ -155,8 +158,8 @@ public class DisguiseUtil {
                 return new WrapperPlayServerEntityVelocity(e);
             case SPAWN_PLAYER:
                 return new WrapperPlayServerSpawnPlayer(e);
-//            case DESTROY_ENTITIES:
-//                return new WrapperPlayServerDestroyEntities(e);
+            case DESTROY_ENTITIES:
+                return new WrapperPlayServerDestroyEntities(e);
         }
     }
 
@@ -191,8 +194,8 @@ public class DisguiseUtil {
                 return ((WrapperPlayServerEntityVelocity) packetWrapper).getEntityId();
             case SPAWN_PLAYER:
                 return ((WrapperPlayServerSpawnPlayer) packetWrapper).getEntityId();
-//            case DESTROY_ENTITIES:
-//                return ((WrapperPlayServerDestroyEntities) packetWrapper).getEntityIds()[0];
+            case DESTROY_ENTITIES:
+                return ((WrapperPlayServerDestroyEntities) packetWrapper).getEntityIds()[0];
         }
     }
 

@@ -3,10 +3,6 @@
 
 
  ## bugs:
- - ensure all the squids heights are correct to how libs disguise had them
- - make sure armor-stand metadata works, ensure all stand fields are correct
- - go through each entity metadata holder and make sure they don't crash players, improve that code too
- - make guardians yawlocked
+ - distributor for handling passenger (when spigot attempts to add an entity on player head, instead put it on disguise head)
  - finish documentation
- - ensure commands work correctly
  - add to legacy and hook up code, make sure all works correctly

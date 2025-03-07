@@ -10,6 +10,7 @@ public class DisguiseGuardian extends AbstractDisguise<GuardianMetadataHolder> {
 
     public DisguiseGuardian(@NotNull Player player) {
         super(DisguiseType.GUARDIAN, new GuardianMetadataHolder(), player);
+        this.setHeadRotationPitchLocked(true); // SO IT DOESN'T IEIOJIHOINHNHOIEN ITS HEAD AROUND YO
     }
 
     @NotNull public String getDisguiseHurtSoundString() {

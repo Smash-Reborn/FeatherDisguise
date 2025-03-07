@@ -5,6 +5,7 @@ import com.github.retrooper.packetevents.util.Vector3f;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import net.minecraft.server.v1_8_R3.EntityArmorStand;
+import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 import org.reborn.FeatherDisguise.metadata.EntityMetadataIndexes;
 import org.reborn.FeatherDisguise.metadata.EntityType;
@@ -30,43 +31,43 @@ public class ArmorStandMetadataHolder extends LivingEntityMetadataHolder<EntityT
     }
 
     public boolean isSmall() {
-        return this.getMaskBit((byte) EntityMetadataIndexes.ARMOR_STAND_GENERIC, ArmorStandBitMaskType.IS_SMALL.getBitValue());
+        return this.getArmorStandMaskBit((byte) ArmorStandBitMaskType.IS_SMALL.getBitID());
     }
 
     public void setSmall(boolean isSmall) {
-        this.setMaskBit(EntityMetadataIndexes.ARMOR_STAND_GENERIC, ArmorStandBitMaskType.IS_SMALL.getBitValue(), isSmall);
+        this.setArmorStandMaskBit((byte) ArmorStandBitMaskType.IS_SMALL.getBitID(), isSmall);
     }
 
-    public boolean hasGravity() {
-        return this.getMaskBit((byte) EntityMetadataIndexes.ARMOR_STAND_GENERIC, ArmorStandBitMaskType.HAS_GRAVITY.getBitValue());
+    public boolean hasNoGravity() {
+        return this.getArmorStandMaskBit((byte) ArmorStandBitMaskType.HAS_NO_GRAVITY.getBitID());
     }
 
-    public void setGravity(boolean hasGravity) {
-        this.setMaskBit(EntityMetadataIndexes.ARMOR_STAND_GENERIC, ArmorStandBitMaskType.HAS_GRAVITY.getBitValue(), hasGravity);
+    public void setNoGravity(boolean hasNoGravity) {
+        this.setArmorStandMaskBit((byte) ArmorStandBitMaskType.HAS_NO_GRAVITY.getBitID(), hasNoGravity);
     }
 
     public boolean hasArms() {
-        return this.getMaskBit((byte) EntityMetadataIndexes.ARMOR_STAND_GENERIC, ArmorStandBitMaskType.HAS_ARMS.getBitValue());
+        return this.getArmorStandMaskBit((byte) ArmorStandBitMaskType.HAS_ARMS.getBitID());
     }
 
     public void setArms(boolean hasArms) {
-        this.setMaskBit(EntityMetadataIndexes.ARMOR_STAND_GENERIC, ArmorStandBitMaskType.HAS_ARMS.getBitValue(), hasArms);
+        this.setArmorStandMaskBit((byte) ArmorStandBitMaskType.HAS_ARMS.getBitID(), hasArms);
     }
 
     public boolean hasRemovedBaseplate() {
-        return this.getMaskBit((byte) EntityMetadataIndexes.ARMOR_STAND_GENERIC, ArmorStandBitMaskType.REMOVE_BASEPLATE.getBitValue());
+        return this.getArmorStandMaskBit((byte) ArmorStandBitMaskType.REMOVE_BASEPLATE.getBitID());
     }
 
     public void setRemovedBaseplate(boolean removedBaseplate) {
-        this.setMaskBit(EntityMetadataIndexes.ARMOR_STAND_GENERIC, ArmorStandBitMaskType.REMOVE_BASEPLATE.getBitValue(), removedBaseplate);
+        this.setArmorStandMaskBit((byte) ArmorStandBitMaskType.REMOVE_BASEPLATE.getBitID(), removedBaseplate);
     }
 
     public boolean isMarker() {
-        return this.getMaskBit((byte) EntityMetadataIndexes.ARMOR_STAND_GENERIC, ArmorStandBitMaskType.IS_MARKER.getBitValue());
+        return this.getArmorStandMaskBit((byte) ArmorStandBitMaskType.IS_MARKER.getBitID());
     }
 
     public void setMarker(boolean isMarker) {
-        this.setMaskBit(EntityMetadataIndexes.ARMOR_STAND_GENERIC, ArmorStandBitMaskType.IS_MARKER.getBitValue(), isMarker);
+        this.setArmorStandMaskBit((byte) ArmorStandBitMaskType.IS_MARKER.getBitID(), isMarker);
     }
 
     @NotNull public Vector3f getHeadRotation() {
@@ -117,15 +118,31 @@ public class ArmorStandMetadataHolder extends LivingEntityMetadataHolder<EntityT
         this.setIndex((byte) EntityMetadataIndexes.ARMOR_STAND_RIGHT_LEG_POSITION, EntityDataTypes.ROTATION, rightLegRotation);
     }
 
+    @ApiStatus.Internal
+    private boolean getArmorStandMaskBit(byte bit) {
+        return (this.getMask((byte) EntityMetadataIndexes.ARMOR_STAND_GENERIC) & bit) != 0;
+    }
+
+    @ApiStatus.Internal
+    private void setArmorStandMaskBit(byte bit, boolean value) {
+        byte mask = this.getIndex((byte) EntityMetadataIndexes.ARMOR_STAND_GENERIC, (byte) 0); // default bitmask value
+        final boolean currentValue = (mask & bit) == bit;
+        if (currentValue == value) return;
+
+        if (value) mask = (byte) (mask | bit);
+        else mask = (byte) (mask & -(bit + 1));
+
+        this.setMask((byte) EntityMetadataIndexes.ARMOR_STAND_GENERIC, mask);
+    }
+
     @Getter @AllArgsConstructor
     public enum ArmorStandBitMaskType {
-        IS_SMALL(0, (byte) 0x01),
-        HAS_GRAVITY(1, (byte) 0x02),
-        HAS_ARMS(2, (byte) 0x04),
-        REMOVE_BASEPLATE(3, (byte) 0x08),
-        IS_MARKER(4, (byte) 0x16);
+        IS_SMALL(1), // 1, -2
+        HAS_NO_GRAVITY(2), // 2, -3
+        HAS_ARMS(4), // 4, -5
+        REMOVE_BASEPLATE(8), // 8, -9
+        IS_MARKER(16); // 16, -17
 
         private final int bitID;
-        private final byte bitValue;
     }
 }

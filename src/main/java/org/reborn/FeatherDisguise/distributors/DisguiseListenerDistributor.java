@@ -84,9 +84,9 @@ public class DisguiseListenerDistributor implements ITeardown, Listener {
             case SPAWN_PLAYER:
                 distributorType = DisguisePacketDistributorType.SPAWNING_PLAYER;
                 break;
-//            case DESTROY_ENTITIES:
-//                distributorType = DisguisePacketDistributorType.DESTROY_PLAYER;
-//                break;
+            case DESTROY_ENTITIES:
+                distributorType = DisguisePacketDistributorType.DESTROY_PLAYER;
+                break;
         }
 
         if (distributorType == DisguisePacketDistributorType.UNKNOWN_OR_INVALID || !disguisePacketDistributors.containsKey(distributorType)) {
@@ -113,7 +113,7 @@ public class DisguiseListenerDistributor implements ITeardown, Listener {
         this.disguisePacketDistributors.put(DisguisePacketDistributorType.EQUIPMENT, new DisguisePacketEquipmentDistributor());
         this.disguisePacketDistributors.put(DisguisePacketDistributorType.METADATA, new DisguisePacketMetadataDistributor());
         this.disguisePacketDistributors.put(DisguisePacketDistributorType.SPAWNING_PLAYER, new DisguisePacketSpawnDistributor());
-        //this.disguisePacketDistributors.put(DisguisePacketDistributorType.DESTROY_PLAYER, new DisguisePacketDestroyDistributor());
+        this.disguisePacketDistributors.put(DisguisePacketDistributorType.DESTROY_PLAYER, new DisguisePacketDestroyDistributor());
     }
 
     @EventHandler

@@ -83,14 +83,14 @@ public class EntityType<T extends Entity> {
         GIANT = register(EntityGiantZombie.class, org.bukkit.entity.EntityType.GIANT, "Giant", 53, new EntityDimensions(3.6f, 12.0f, 10.44f));
         ZOMBIE = register(EntityZombie.class, org.bukkit.entity.EntityType.ZOMBIE, "Zombie", 54, new EntityDimensions(0.6f, 1.95f, 1.74f));
         ZOMBIE_VILLAGER = register(EntityZombie.class, org.bukkit.entity.EntityType.ZOMBIE, "Zombie", 54, new EntityDimensions(0.6f, 1.95f, 1.74f));                // has to use ZOMBIE data
-        SLIME = register(EntitySlime.class, org.bukkit.entity.EntityType.SLIME, "Slime", 55, new EntityDimensions(0.52f, 0.52f, 0.325f));
+        SLIME = register(EntitySlime.class, org.bukkit.entity.EntityType.SLIME, "Slime", 55, new EntityDimensions(0.51000005f, 0.51000005f, 0.325f));
         GHAST = register(EntityGhast.class, org.bukkit.entity.EntityType.GHAST, "Ghast", 56, new EntityDimensions(4.0f, 4.0f, 2.6f));
         ZOMBIE_PIGMAN = register(EntityPigZombie.class, org.bukkit.entity.EntityType.PIG_ZOMBIE, "PigZombie", 57, new EntityDimensions(0.6f, 1.95f, 1.79f));
         ENDERMAN = register(EntityEnderman.class, org.bukkit.entity.EntityType.ENDERMAN, "Enderman", 58, new EntityDimensions(0.6f, 2.9f, 2.55f));
         CAVE_SPIDER = register(EntityCaveSpider.class, org.bukkit.entity.EntityType.CAVE_SPIDER, "CaveSpider", 59, new EntityDimensions(0.7f, 0.5f, 0.45f));
         SILVERFISH = register(EntitySilverfish.class, org.bukkit.entity.EntityType.SILVERFISH, "Silverfish", 60, new EntityDimensions(0.4f, 0.3f, 0.13f));
         BLAZE = register(EntityBlaze.class, org.bukkit.entity.EntityType.BLAZE, "Blaze", 61, new EntityDimensions(0.6f, 1.8f));
-        MAGMA_CUBE = register(EntityMagmaCube.class, org.bukkit.entity.EntityType.MAGMA_CUBE, "LavaSlime", 62, new EntityDimensions(0.52f, 0.52f, 0.325f));
+        MAGMA_CUBE = register(EntityMagmaCube.class, org.bukkit.entity.EntityType.MAGMA_CUBE, "LavaSlime", 62, new EntityDimensions(0.51000005f, 0.51000005f, 0.325f));
         WITHER_BOSS = register(EntityWither.class, org.bukkit.entity.EntityType.WITHER, "WitherBoss", 64, new EntityDimensions(0.9f, 3.5f));
         BAT = register(EntityBat.class, org.bukkit.entity.EntityType.BAT, "Bat", 65, new EntityDimensions(0.5f, 0.9f, 0.45f));
         WITCH = register(EntityWitch.class, org.bukkit.entity.EntityType.WITCH, "Witch", 66, new EntityDimensions(0.6f, 1.95f, 1.62f));

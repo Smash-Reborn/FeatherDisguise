@@ -24,12 +24,12 @@ public class EndermanMetadataHolder extends LivingEntityMetadataHolder<EntityTyp
 
     public void clearCarriedBlock() {
         this.setIndex((byte) EntityMetadataIndexes.ENDERMAN_CARRIED_BLOCK, EntityDataTypes.SHORT, (short) 0); // blockID
-        this.setIndex((byte) EntityMetadataIndexes.ENDERMAN_CARRIED_BLOCK, EntityDataTypes.BYTE, (byte) 0); // blockData
+        this.setIndex((byte) EntityMetadataIndexes.ENDERMAN_CARRIED_BLOCK_DATA, EntityDataTypes.BYTE, (byte) 0); // blockData
     }
 
     public void setCarriedBlock(@NotNull ItemStack itemStack) {
         this.setIndex((byte) EntityMetadataIndexes.ENDERMAN_CARRIED_BLOCK, EntityDataTypes.SHORT, (short) (itemStack.getTypeId() & 255)); // blockID
-        this.setIndex((byte) EntityMetadataIndexes.ENDERMAN_CARRIED_BLOCK, EntityDataTypes.BYTE, (byte) (itemStack.getDurability() & 255)); // blockData
+        this.setIndex((byte) EntityMetadataIndexes.ENDERMAN_CARRIED_BLOCK_DATA, EntityDataTypes.BYTE, (byte) (itemStack.getDurability() & 255)); // blockData
     }
 
     @ApiStatus.Internal

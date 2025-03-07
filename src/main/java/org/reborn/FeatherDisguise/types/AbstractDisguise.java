@@ -11,6 +11,7 @@ import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.reborn.FeatherDisguise.DisguiseType;
+import org.reborn.FeatherDisguise.metadata.EntityDimensions;
 import org.reborn.FeatherDisguise.metadata.types.AbstractMetadataHolder;
 import org.reborn.FeatherDisguise.util.DisguiseUtil;
 import org.reborn.FeatherDisguise.util.EntityEquipmentHandler;
@@ -38,15 +39,21 @@ public class AbstractDisguise<E extends AbstractMetadataHolder<?>> {
 
     @Getter @NotNull private final HashSet<Integer> viewingPlayerIDsMarkedAsHidden;
 
+    @Setter @NotNull private EntityDimensions cachedEntityDimensions;
+
+    private float precalculatedSquidEntityYPosModifier;
+
     public AbstractDisguise(@NotNull final DisguiseType disguiseType,
                             @NotNull final E entityObject,
                             @NotNull final Player owningPlayer) {
 
         this.disguiseType = disguiseType;
         this.owningBukkitPlayer = owningPlayer;
-        this.relatedEntitiesWrapper = new DisguiseRelatedEntityWrapper<>(this, entityObject);
         this.disguiseNametag = ChatColor.YELLOW + owningPlayer.getName();
+        this.relatedEntitiesWrapper = new DisguiseRelatedEntityWrapper<>(this, entityObject);
         this.viewingPlayerIDsMarkedAsHidden = new HashSet<>();
+        this.cachedEntityDimensions = this.getRelatedEntitiesWrapper().getBaseDisguiseEntity().getMetadataHolder().getEntityType().getEntityDimensions();
+        this.recalculateSquidEntityYPosModifier();
     }
 
     @Nullable public Sound getDisguiseHurtSound() {
@@ -94,11 +101,14 @@ public class AbstractDisguise<E extends AbstractMetadataHolder<?>> {
     }
 
     public double getCalculatedSquidRelatedEntityYPos(final double baseYInput) {
-        return baseYInput + this.relatedEntitiesWrapper.getBaseDisguiseDimensions().getEyeHeight() + this.getSquidRelatedEntityYOffset();
-        // playerYPos + dimensions.eyeHeight() + squidRelatedEntityYOffset()
+        return baseYInput + this.precalculatedSquidEntityYPosModifier;
     }
 
     @NotNull public Vector3d getCalculatedSquidRelatedEntityPos(final double baseXInput, final double baseYInput, final double baseZInput) {
         return new Vector3d(baseXInput, this.getCalculatedSquidRelatedEntityYPos(baseYInput), baseZInput);
+    }
+
+    protected void recalculateSquidEntityYPosModifier() {
+        this.precalculatedSquidEntityYPosModifier = (float) ((this.cachedEntityDimensions.getHeight() * 0.65d /*0.75*/) + this.getSquidRelatedEntityYOffset());
     }
 }

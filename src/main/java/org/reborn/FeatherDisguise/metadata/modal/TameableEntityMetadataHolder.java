@@ -25,19 +25,19 @@ public class TameableEntityMetadataHolder<E extends EntityType<?>> extends AgedE
     }
 
     public boolean isTamed() {
-        return this.getMaskBit((byte) EntityMetadataIndexes.TAMEABLE_ENTITY_GENERIC, TamedEntityBitMaskType.IS_TAMED.getBitValue());
+        return this.getTamedMaskBit((byte) TamedEntityBitMaskType.IS_TAMED.getBitID());
     }
 
     public void setTamed(boolean isTamed) {
-        this.setMaskBit(EntityMetadataIndexes.TAMEABLE_ENTITY_GENERIC, TamedEntityBitMaskType.IS_TAMED.getBitValue(), isTamed);
+        this.setTamedMaskBit((byte) TamedEntityBitMaskType.IS_TAMED.getBitID(), isTamed);
     }
 
     public boolean isSitting() {
-        return this.getMaskBit((byte) EntityMetadataIndexes.TAMEABLE_ENTITY_GENERIC, TamedEntityBitMaskType.IS_SITTING.getBitValue());
+        return this.getTamedMaskBit((byte) TamedEntityBitMaskType.IS_SITTING.getBitID());
     }
 
     public void setSitting(boolean isPlonkedOnDaGround) {
-        this.setMaskBit(EntityMetadataIndexes.TAMEABLE_ENTITY_GENERIC, TamedEntityBitMaskType.IS_SITTING.getBitValue(), isPlonkedOnDaGround);
+        this.setTamedMaskBit((byte) TamedEntityBitMaskType.IS_SITTING.getBitID(), isPlonkedOnDaGround);
     }
 
     @ApiStatus.Internal
@@ -55,12 +55,28 @@ public class TameableEntityMetadataHolder<E extends EntityType<?>> extends AgedE
         this.setIndex((byte) EntityMetadataIndexes.TAMEABLE_ENTITY_OWNER_NAME, EntityDataTypes.STRING, name);
     }
 
+    @ApiStatus.Internal
+    private boolean getTamedMaskBit(byte bit) {
+        return (this.getMask((byte) EntityMetadataIndexes.TAMEABLE_ENTITY_GENERIC) & bit) != 0;
+    }
+
+    @ApiStatus.Internal
+    private void setTamedMaskBit(byte bit, boolean value) {
+        byte mask = this.getIndex((byte) EntityMetadataIndexes.TAMEABLE_ENTITY_GENERIC, (byte) 0); // default bitmask value
+        final boolean currentValue = (mask & bit) == bit;
+        if (currentValue == value) return;
+
+        if (value) mask = (byte) (mask | bit);
+        else mask = (byte) (mask & -(bit + 1));
+
+        this.setMask((byte) EntityMetadataIndexes.TAMEABLE_ENTITY_GENERIC, mask);
+    }
+
     @Getter @AllArgsConstructor
     public enum TamedEntityBitMaskType {
-        IS_TAMED(0, (byte) 0x01),
-        IS_SITTING(2, (byte) 0x04);
+        IS_TAMED(4), // 4, -5
+        IS_SITTING(1); // 1, -2
 
         private final int bitID;
-        private final byte bitValue;
     }
 }
