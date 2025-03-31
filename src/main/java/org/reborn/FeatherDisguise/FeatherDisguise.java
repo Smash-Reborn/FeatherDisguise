@@ -12,6 +12,7 @@ import org.reborn.FeatherDisguise.commands.CommandDisguise;
 import org.reborn.FeatherDisguise.commands.CommandDisguiseList;
 import org.reborn.FeatherDisguise.commands.CommandRefreshDisguise;
 import org.reborn.FeatherDisguise.commands.CommandRemoveDisguise;
+import org.reborn.FeatherDisguise.metadata.CachedEntityTypes;
 import org.reborn.FeatherDisguise.util.Constants;
 
 @Log4j2
@@ -22,6 +23,8 @@ public class FeatherDisguise extends JavaPlugin {
     @Getter private static FeatherDisguise staticInstance; // godly cringe but im lazy af
 
     @Getter private DisguiseAPI disguiseAPI;
+
+    @Getter private CachedEntityTypes cachedEntityTypes;
 
     @Override
     public void onLoad() {
@@ -44,6 +47,7 @@ public class FeatherDisguise extends JavaPlugin {
             staticInstance = this;
             PacketEvents.getAPI().init();
             disguiseAPI = new DisguiseAPI(this);
+            cachedEntityTypes = new CachedEntityTypes();
             this.registerCommands();
             log.info(Constants.formattedPositiveText("Successfully enabled " + ColorUtil.toString(NamedTextColor.GREEN) + Constants.PLUGIN_NAME + " " + ColorUtil.toString(NamedTextColor.WHITE) + "plugin"));
 
@@ -58,6 +62,8 @@ public class FeatherDisguise extends JavaPlugin {
             log.info(Constants.formattedNeutralText("Now disabling " + ColorUtil.toString(NamedTextColor.AQUA) + Constants.PLUGIN_NAME + " " + ColorUtil.toString(NamedTextColor.WHITE) + "plugin"));
             disguiseAPI.teardown();
             disguiseAPI = null;
+            cachedEntityTypes.teardown();
+            cachedEntityTypes = null;
             PacketEvents.getAPI().terminate();
             plugin = null;
             log.info(Constants.formattedPositiveText("Successfully disabled " + ColorUtil.toString(NamedTextColor.GREEN) + Constants.PLUGIN_NAME + " " + ColorUtil.toString(NamedTextColor.WHITE) + "plugin"));
