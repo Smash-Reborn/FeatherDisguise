@@ -3,7 +3,6 @@ package org.reborn.FeatherDisguise.distributors.impl;
 import com.github.retrooper.packetevents.event.simple.PacketPlaySendEvent;
 import com.github.retrooper.packetevents.wrapper.PacketWrapper;
 import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerEntityAnimation;
-import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
@@ -25,7 +24,7 @@ public class DisguisePacketAnimationDistributor implements IDisguisePacketDistri
         final WrapperPlayServerEntityAnimation animationPacket = (WrapperPlayServerEntityAnimation) interceptedPacket;
 
         // if the disguise is flagged as "hidden" for the observing player, why would we bother sending them packets, just early exit
-        if (disguise.getViewingPlayerIDsMarkedAsHidden().contains(observer.getEntityId())) {
+        if (disguise.isDisguiseAndRelatedEntitiesHiddenForViewer(observer)) {
             packetSendEvent.setCancelled(true);
             return;
         }

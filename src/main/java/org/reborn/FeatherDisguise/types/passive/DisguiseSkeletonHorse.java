@@ -2,7 +2,7 @@ package org.reborn.FeatherDisguise.types.passive;
 
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
-import org.reborn.FeatherDisguise.DisguiseType;
+import org.reborn.FeatherDisguise.enums.DisguiseType;
 import org.reborn.FeatherDisguise.metadata.types.passive.SkeletonHorseMetadataHolder;
 import org.reborn.FeatherDisguise.types.AbstractDisguise;
 

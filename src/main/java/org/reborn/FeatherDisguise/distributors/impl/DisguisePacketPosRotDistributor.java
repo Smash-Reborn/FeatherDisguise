@@ -25,7 +25,7 @@ public class DisguisePacketPosRotDistributor implements IDisguisePacketDistribut
                                          @NotNull AbstractDisguise<?> disguise, @NotNull Player observer, @NotNull DisguiseListenerDistributor disguiseListenerDistributor) {
 
         // if the disguise is flagged as "hidden" for the observing player, why would we bother sending them packets, just early exit
-        if (disguise.getViewingPlayerIDsMarkedAsHidden().contains(observer.getEntityId())) {
+        if (disguise.isDisguiseAndRelatedEntitiesHiddenForViewer(observer)) {
             packetSendEvent.setCancelled(true);
             return;
         }

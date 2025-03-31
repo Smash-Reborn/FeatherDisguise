@@ -11,16 +11,17 @@ import org.bukkit.craftbukkit.v1_8_R3.CraftSound;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.reborn.FeatherDisguise.DisguiseType;
+import org.reborn.FeatherDisguise.enums.DisguiseType;
+import org.reborn.FeatherDisguise.enums.ViewType;
 import org.reborn.FeatherDisguise.metadata.EntityDimensions;
 import org.reborn.FeatherDisguise.metadata.types.AbstractMetadataHolder;
 import org.reborn.FeatherDisguise.util.DisguiseUtil;
 import org.reborn.FeatherDisguise.util.EntityEquipmentHandler;
 import org.reborn.FeatherDisguise.wrapper.DisguiseRelatedEntityWrapper;
 
-import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.WeakHashMap;
 
 @Log4j2
 public class AbstractDisguise<E extends AbstractMetadataHolder<?>> {
@@ -39,7 +40,7 @@ public class AbstractDisguise<E extends AbstractMetadataHolder<?>> {
 
     private EntityEquipmentHandler equipmentHandler;
 
-    @Getter @NotNull private final HashSet<Integer> viewingPlayerIDsMarkedAsHidden;
+    @Getter @NotNull private final WeakHashMap<Player, ViewType> viewingPlayerMarkedType;
 
     @Setter @NotNull private EntityDimensions cachedEntityDimensions;
 
@@ -53,7 +54,7 @@ public class AbstractDisguise<E extends AbstractMetadataHolder<?>> {
         this.owningBukkitPlayer = owningPlayer;
         this.disguiseNametag = ChatColor.YELLOW + owningPlayer.getName();
         this.relatedEntitiesWrapper = new DisguiseRelatedEntityWrapper<>(this, entityObject);
-        this.viewingPlayerIDsMarkedAsHidden = new HashSet<>();
+        this.viewingPlayerMarkedType = new WeakHashMap<>();
         this.cachedEntityDimensions = this.getRelatedEntitiesWrapper().getBaseDisguiseEntity().getMetadataHolder().getEntityType().getEntityDimensions();
         this.recalculateSquidEntityYPosModifier();
     }
@@ -102,6 +103,14 @@ public class AbstractDisguise<E extends AbstractMetadataHolder<?>> {
         // only constructs the equipment handler if we need too
         if (equipmentHandler == null) {equipmentHandler = new EntityEquipmentHandler();}
         return Optional.of(equipmentHandler);
+    }
+
+    public boolean doesViewingPlayerMatchMarkerType(@NotNull Player viewer, @NotNull ViewType viewType) {
+        return viewingPlayerMarkedType.containsKey(viewer) && viewingPlayerMarkedType.get(viewer) == viewType;
+    }
+
+    public boolean isDisguiseAndRelatedEntitiesHiddenForViewer(@NotNull Player viewer) {
+        return doesViewingPlayerMatchMarkerType(viewer, ViewType.CANNOT_SEE_DISGUISE) || doesViewingPlayerMatchMarkerType(viewer, ViewType.HARD_HIDDEN_DISGUISE);
     }
 
     public double getSquidRelatedEntityYOffset() {

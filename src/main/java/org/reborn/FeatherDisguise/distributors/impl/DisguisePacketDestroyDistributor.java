@@ -3,6 +3,7 @@ package org.reborn.FeatherDisguise.distributors.impl;
 import com.github.retrooper.packetevents.event.simple.PacketPlaySendEvent;
 import com.github.retrooper.packetevents.wrapper.PacketWrapper;
 import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerDestroyEntities;
+import lombok.extern.log4j.Log4j2;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.reborn.FeatherDisguise.distributors.DisguiseListenerDistributor;
@@ -12,6 +13,7 @@ import org.reborn.FeatherDisguise.types.AbstractDisguise;
 /** Handles client-bound destroy packets for disguises.
  * Relative NMS packet is {@link net.minecraft.server.v1_8_R3.PacketPlayOutEntityDestroy}.
  * **/
+@Log4j2
 public class DisguisePacketDestroyDistributor implements IDisguisePacketDistributor {
 
     @Override
@@ -19,7 +21,7 @@ public class DisguisePacketDestroyDistributor implements IDisguisePacketDistribu
                                          @NotNull AbstractDisguise<?> disguise, @NotNull Player observer, @NotNull DisguiseListenerDistributor disguiseListenerDistributor) {
 
         if (!(interceptedPacket instanceof WrapperPlayServerDestroyEntities)) return;
-        final WrapperPlayServerDestroyEntities destroyPacket = (WrapperPlayServerDestroyEntities) interceptedPacket;
+        //final WrapperPlayServerDestroyEntities destroyPacket = (WrapperPlayServerDestroyEntities) interceptedPacket;
 
         // at this point, we can assume that the server is trying to send destroy packets for the disguise owning PLAYER.
         // (this is most likely because the tracker calculated they left some sort of render distance or chunk tracked section)
@@ -27,8 +29,8 @@ public class DisguisePacketDestroyDistributor implements IDisguisePacketDistribu
         // packet might have been sent. in most cases however, we can just handle it by cancelling the player destroy packet, then
         // just calling our method to hide the disguise for the specific player.
 
+        //packetSendEvent.markForReEncode(false);
         packetSendEvent.setCancelled(true);
-        packetSendEvent.markForReEncode(false);
 
         disguiseListenerDistributor.getFeatherDisguise().getDisguiseAPI().hideDisguiseForPlayer(disguise, observer, false);
         // DON'T spawn the player entity back in when hiding the disguise, because remember we assume in these cases the

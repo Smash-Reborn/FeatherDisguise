@@ -8,7 +8,7 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
-import org.reborn.FeatherDisguise.DisguiseType;
+import org.reborn.FeatherDisguise.enums.DisguiseType;
 import org.reborn.FeatherDisguise.FeatherDisguise;
 import org.reborn.FeatherDisguise.util.Constants;
 import org.reborn.FeatherDisguise.util.DisguiseUtil;

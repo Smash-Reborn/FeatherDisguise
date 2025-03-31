@@ -19,7 +19,7 @@ public class DisguisePacketAttachDistributor implements IDisguisePacketDistribut
         final WrapperPlayServerAttachEntity attachPacket = (WrapperPlayServerAttachEntity) interceptedPacket;
 
         // if the disguise is flagged as "hidden" for the observing player, why would we bother sending them packets, just early exit
-        if (disguise.getViewingPlayerIDsMarkedAsHidden().contains(observer.getEntityId())) {
+        if (disguise.isDisguiseAndRelatedEntitiesHiddenForViewer(observer)) {
             packetSendEvent.setCancelled(true);
             return;
         }

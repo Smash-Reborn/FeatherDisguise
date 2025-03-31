@@ -18,6 +18,10 @@ public class DisguiseOutgoingPacketInterceptor extends SimplePacketListenerAbstr
 
     @NotNull private final DisguiseListenerDistributor disguiseListenerDistributor;
 
+    // todo
+    //  - the only lead i have on this bug so far is its got something to do with spawn/destroy packets & spectator mode (maybe the plyaerInfo packet too?)
+
+
     /* Server -> Client
      * (server is sending packet(s) to player client(s) */
     @Override
@@ -29,8 +33,8 @@ public class DisguiseOutgoingPacketInterceptor extends SimplePacketListenerAbstr
 
         // player(s) who will receive the packet
         // (assume that receivers will be everyone who in the NMS entity tracker can "see" the owningPlayer (one who is disguised))
-        final Player obvseringPlayer = e.getPlayer();
-        if (obvseringPlayer == null) return;
+        final Player observingPlayer = e.getPlayer();
+        if (observingPlayer == null) return;
 
         // we need to obtain a packet wrapper for the packets being sent.
         // if we return null, that means it's not one of the packets we care about, so we can exit early
@@ -51,7 +55,7 @@ public class DisguiseOutgoingPacketInterceptor extends SimplePacketListenerAbstr
         // we do not want to send packets to the observing player if it's also the disguised player.
         // that would absolutely fuck the disguised players client up. only VIEWING players should be getting these packets
         final AbstractDisguise<?> disguise = optDisguise.get();
-        if (disguise.getOwningBukkitPlayer().getEntityId() == obvseringPlayer.getEntityId()) return;
+        if (disguise.getOwningBukkitPlayer().getEntityId() == observingPlayer.getEntityId()) return;
 
         /*
          * --> ok at this point we can confirm a few things:
@@ -60,6 +64,6 @@ public class DisguiseOutgoingPacketInterceptor extends SimplePacketListenerAbstr
          * - the disguise manager has confirmed the disguise is able to modify/send whatever packets we need to observers
          */
 
-        disguiseListenerDistributor.handleOutgoingInterceptedPackets(e, packetBeingSent, disguise, obvseringPlayer);
+        disguiseListenerDistributor.handleOutgoingInterceptedPackets(e, packetBeingSent, disguise, observingPlayer);
     }
 }

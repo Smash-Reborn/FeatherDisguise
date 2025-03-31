@@ -1,4 +1,4 @@
-package org.reborn.FeatherDisguise;
+package org.reborn.FeatherDisguise.enums;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;

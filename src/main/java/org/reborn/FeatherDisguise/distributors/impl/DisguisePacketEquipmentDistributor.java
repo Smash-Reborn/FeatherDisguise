@@ -30,7 +30,7 @@ public class DisguisePacketEquipmentDistributor implements IDisguisePacketDistri
         final WrapperPlayServerEntityEquipment equipmentPacket = (WrapperPlayServerEntityEquipment) interceptedPacket;
 
         // are they even able to display items in their hand slot? don't bother modifying the packet if they can't
-        if (!DisguiseUtil.isDisguiseAbleToRenderItemsInHandSlots(disguise.getDisguiseType()) || disguise.getViewingPlayerIDsMarkedAsHidden().contains(observer.getEntityId())) {
+        if (!DisguiseUtil.isDisguiseAbleToRenderItemsInHandSlots(disguise.getDisguiseType()) || disguise.isDisguiseAndRelatedEntitiesHiddenForViewer(observer)) {
             packetSendEvent.setCancelled(true); // they have a disguise, but it can't display items, just outright cancel the packet, so it won't send for the wrong entity
             return;
         }

@@ -6,7 +6,7 @@ import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerUp
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
-import org.reborn.FeatherDisguise.DisguiseType;
+import org.reborn.FeatherDisguise.enums.DisguiseType;
 import org.reborn.FeatherDisguise.metadata.types.hostile.WitherBossMetadataHolder;
 import org.reborn.FeatherDisguise.types.AbstractDisguise;
 

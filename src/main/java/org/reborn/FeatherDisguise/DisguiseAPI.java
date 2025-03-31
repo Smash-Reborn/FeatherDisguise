@@ -13,6 +13,8 @@ import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.reborn.FeatherDisguise.distributors.DisguiseListenerDistributor;
+import org.reborn.FeatherDisguise.enums.DisguiseType;
+import org.reborn.FeatherDisguise.enums.ViewType;
 import org.reborn.FeatherDisguise.types.AbstractDisguise;
 import org.reborn.FeatherDisguise.util.DisguiseUtil;
 import org.reborn.FeatherDisguise.util.ITeardown;
@@ -110,7 +112,7 @@ public class DisguiseAPI implements ITeardown {
     public void removeDisguise(@NotNull Player player, boolean showPlayerAfterRemoval) {
         final Optional<AbstractDisguise<?>> optPlayerDisguise = this.getPlayerDisguise(player);
         if (!optPlayerDisguise.isPresent()) {
-            //log.info("Player ({}) does not have a valid disguise active. Unable to remove disguise", player.getName());
+            log.info("Player ({}) does not have a valid disguise active. Unable to remove disguise", player.getName());
             return;
         }
 
@@ -178,6 +180,19 @@ public class DisguiseAPI implements ITeardown {
     public void showDisguiseForPlayers(@NotNull AbstractDisguise<?> disguise, @NotNull List<Player> viewingPlayers) {
         if (viewingPlayers.isEmpty()) return; // you will suffer the stabbing pain of my thousand sword strike
 
+        // optimisation: if all viewers are already flagged as being able to "see" the disguise, don't bother creating packets
+        //               (you don't have to worry about hiding the owning playerEntity, because they technically should already be removed for the viewer)
+        boolean shouldContinue = false;
+        for (final Player viewer : viewingPlayers) {
+            if (!disguise.doesViewingPlayerMatchMarkerType(viewer, ViewType.CAN_SEE_DISGUISE)) {
+                shouldContinue = true;
+                break;
+            }
+        }
+
+        if (!shouldContinue) return;
+
+
         final Optional<List<PacketWrapper<?>>> optSpawningPackets = disguise.getRelatedEntitiesWrapper().generateSpawningPacketsForAllDisguiseRelatedEntities();
         if (!optSpawningPackets.isPresent()) {
             log.warn("Unable to generate spawning packets for disguise ({}) (owningPlayer: {})",
@@ -196,15 +211,22 @@ public class DisguiseAPI implements ITeardown {
 
         for (final Player viewer : viewingPlayers) {
             if (viewer.getEntityId() == disguise.getOwningBukkitPlayer().getEntityId()) continue; // cannot do any packets for the player who owns the disguise
-            if (!viewer.getWorld().equals(disguise.getOwningBukkitPlayer().getWorld())) continue;
-
-            // if they were previously marked as the disguise being hidden from them, unmark as we are re-sending spawn packets
-            disguise.getViewingPlayerIDsMarkedAsHidden().remove(viewer.getEntityId());
+            //if (!viewer.getWorld().equals(disguise.getOwningBukkitPlayer().getWorld())) continue; // this is potentially breaking shit, remove for now
 
             // [1] destroy the owning player to the viewers client
+            //     (we only need to send destroy packets to the view if they are flagged as previously not seeing the disguise.
+            //      if the disguise was 'hard hidden' we don't have to worry because their client already doesn't have the player visible)
+            if (disguise.doesViewingPlayerMatchMarkerType(viewer, ViewType.CANNOT_SEE_DISGUISE)) {
+                PacketUtil.sendPacketEventsPacket(viewer, destroyPlayerPacket, true);
+            }
+
             // [2] send spawning packets for all our disguise related entities, now the viewing client can see the disguise!
-            PacketUtil.sendPacketEventsPacket(viewer, destroyPlayerPacket, true);
-            PacketUtil.sendPacketEventsPackets(viewer, spawningPackets, true);
+            if (!disguise.doesViewingPlayerMatchMarkerType(viewer, ViewType.CAN_SEE_DISGUISE)) {
+                PacketUtil.sendPacketEventsPackets(viewer, spawningPackets, true);
+            }
+
+            // [3] flag the viewer as now being able to "see" the disguise (so distributors can handle packet work)
+            disguise.getViewingPlayerMarkedType().put(viewer, ViewType.CAN_SEE_DISGUISE);
         }
     }
 
@@ -258,6 +280,20 @@ public class DisguiseAPI implements ITeardown {
     public void hideDisguiseForPlayers(@NotNull AbstractDisguise<?> disguise, @NotNull List<Player> viewingPlayers, boolean showPlayerAfterHiding) {
         if (viewingPlayers.isEmpty()) return; // why... why would u do dis to me
 
+        // optimisation: if we AREN'T showing the owning player entity after removing the disguise entities &
+        //               ALL viewers already have the disguise marked as 'hidden', don't bother creating packets.
+        boolean shouldContinue = false;
+        if (!showPlayerAfterHiding) {
+            for (final Player viewer : viewingPlayers) {
+                if (!disguise.doesViewingPlayerMatchMarkerType(viewer, ViewType.HARD_HIDDEN_DISGUISE)) {
+                    shouldContinue = true;
+                    break;
+                }
+            }
+
+            if (!shouldContinue) return;
+        }
+
         // we might not need to send spawning packets if the flag is set to false.
         // so this bit of code here just makes we are being efficient with our packets
         final List<PacketWrapper<?>> spawningPackets;
@@ -274,14 +310,29 @@ public class DisguiseAPI implements ITeardown {
         for (final Player viewer : viewingPlayers) {
             if (viewer.getEntityId() == disguise.getOwningBukkitPlayer().getEntityId()) continue; // cannot do any packets for the player who owns the disguise
             //if (!viewer.getWorld().equals(disguise.getOwningBukkitPlayer().getWorld())) continue; // can't do this because what if we wanna hide on world switches lol....
-            if (disguise.getViewingPlayerIDsMarkedAsHidden().contains(viewer.getEntityId())) continue; // if they have been marked as hidden for the viewer already, don't bother
 
-            disguise.getViewingPlayerIDsMarkedAsHidden().add(viewer.getEntityId()); // now marked as hidden for this viewer
+            final boolean isAlreadyHidden = disguise.isDisguiseAndRelatedEntitiesHiddenForViewer(viewer);
 
             // [1] disguise & all related entities are now removed from the viewers client
+            if (!isAlreadyHidden) {
+                PacketUtil.sendPacketEventsPacket(viewer, destroyPacket, true);
+            }
+
             // [2] if flag is true, player is now restored back to the viewers client
-            PacketUtil.sendPacketEventsPacket(viewer, destroyPacket, true);
-            if (showPlayerAfterHiding && spawningPackets != null) {PacketUtil.sendPacketEventsPackets(viewer, spawningPackets, true);}
+            //      we are trying to send them owning player entity spawn packets HOWEVER, the viewer has
+            //      already been flagged as being able to "see" the owning player entity. there's no point
+            //      re-sending them player packets again, so if we can, just skip this section.
+            if (showPlayerAfterHiding && spawningPackets != null && disguise.doesViewingPlayerMatchMarkerType(viewer, ViewType.CANNOT_SEE_DISGUISE)) {
+                PacketUtil.sendPacketEventsPackets(viewer, spawningPackets, true);
+            }
+
+            // [3] update the marker to correctly reflect the viewers situation with the disguise (ALWAYS DO THIS LAST, AFTER SENDING PACKETS)
+            //      if they weren't already hidden. it will only send packets if they aren't marked as already hidden.
+            //      if showPlayerAfterHiding = true, we mark them as just only hiding the disguise, but they can still see the owning player.
+            //      else we can assume we are attempting completely hide everything from the viewer, so mark as hard hidden.
+            if (!isAlreadyHidden) {
+                disguise.getViewingPlayerMarkedType().put(viewer, showPlayerAfterHiding ? ViewType.CANNOT_SEE_DISGUISE : ViewType.HARD_HIDDEN_DISGUISE);
+            }
         }
     }
 

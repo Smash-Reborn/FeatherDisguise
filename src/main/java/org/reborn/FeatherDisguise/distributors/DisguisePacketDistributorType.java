@@ -12,6 +12,7 @@ public enum DisguisePacketDistributorType {
     ATTACH_RIDING_OR_LEASH,
     SPAWNING_PLAYER,
     DESTROY_PLAYER,
+    //PLAYER_INFO,
 
     UNKNOWN_OR_INVALID;
 }

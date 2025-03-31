@@ -24,7 +24,7 @@ public class DisguisePacketVelocityDistributor implements IDisguisePacketDistrib
         final WrapperPlayServerEntityVelocity velocityPacket = (WrapperPlayServerEntityVelocity) interceptedPacket;
 
         // if the disguise is flagged as "hidden" for the observing player, why would we bother sending them packets, just early exit
-        if (disguise.getViewingPlayerIDsMarkedAsHidden().contains(observer.getEntityId())) {
+        if (disguise.isDisguiseAndRelatedEntitiesHiddenForViewer(observer)) {
             packetSendEvent.setCancelled(true);
             return;
         }
