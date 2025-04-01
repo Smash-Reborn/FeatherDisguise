@@ -6,7 +6,6 @@ import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.ObjectIterator;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.ApiStatus;
@@ -14,7 +13,9 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.reborn.FeatherDisguise.distributors.DisguiseListenerDistributor;
 import org.reborn.FeatherDisguise.enums.DisguiseType;
+import org.reborn.FeatherDisguise.enums.PacketHandlingType;
 import org.reborn.FeatherDisguise.enums.ViewType;
+import org.reborn.FeatherDisguise.tracker.DisguiseTrackerListener;
 import org.reborn.FeatherDisguise.types.AbstractDisguise;
 import org.reborn.FeatherDisguise.util.DisguiseUtil;
 import org.reborn.FeatherDisguise.util.ITeardown;
@@ -24,16 +25,30 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
-@RequiredArgsConstructor @Log4j2
+@Log4j2
 public class DisguiseAPI implements ITeardown {
 
     @Nullable private Int2ObjectOpenHashMap<AbstractDisguise<?>> activeDisguiseData;
 
     @Nullable private Int2IntOpenHashMap disguiseHittableData;
 
-    private final FeatherDisguise featherDisguise;
+    @ApiStatus.Internal
+    @NotNull private final FeatherDisguise featherDisguise;
+
+    @NotNull private final PacketHandlingType packetHandlingType;
 
     private DisguiseListenerDistributor disguiseListenerDistributor;
+
+    private DisguiseTrackerListener disguiseTrackerListener;
+
+    public DisguiseAPI(@NotNull final FeatherDisguise featherDisguise, @NotNull final PacketHandlingType packetHandlingType) {
+        this.featherDisguise = featherDisguise;
+        this.packetHandlingType = packetHandlingType;
+
+        if (packetHandlingType == PacketHandlingType.CHAD_FEATHER_TRACKER) {
+            this.disguiseTrackerListener = new DisguiseTrackerListener(featherDisguise);
+        }
+    }
 
 
     /** Takes the {@link Player} in the constructor and disguises them as
@@ -47,7 +62,17 @@ public class DisguiseAPI implements ITeardown {
     public void disguisePlayerAsEntity(@NotNull Player player, @NotNull DisguiseType disguiseType, @Nullable String nametagText) {
         final boolean successfullyGeneratedDisguiseData = this.generateDisguise(player, disguiseType, nametagText);
         if (!successfullyGeneratedDisguiseData) return;
-        this.showDisguiseForPlayersInWorld(player);
+
+        // our custom tracker needs to take priority over raw calling the showDisguise() method
+        // (tracker also calls this but passes through itself first in order to synchronise the data there)
+        if (packetHandlingType == PacketHandlingType.CHAD_FEATHER_TRACKER) {
+            DisguiseUtil.handleEntityTrackerUpdateOrSpawnForAllMethodCallForDisguisedPlayer(player, false);
+        }
+
+        // packet handling type --> interceptors, call our regular method
+        else this.showDisguiseForPlayersInWorld(player);
+
+        // [!] important we do this last, ensure our handlers & data are active
         this.checkAndGeneratePacketHandlers();
     }
 
@@ -112,12 +137,20 @@ public class DisguiseAPI implements ITeardown {
     public void removeDisguise(@NotNull Player player, boolean showPlayerAfterRemoval) {
         final Optional<AbstractDisguise<?>> optPlayerDisguise = this.getPlayerDisguise(player);
         if (!optPlayerDisguise.isPresent()) {
-            log.info("Player ({}) does not have a valid disguise active. Unable to remove disguise", player.getName());
+            log.info("Player ({}) does not have a valid disguise active. Early exiting method call", player.getName());
             return;
         }
 
         final AbstractDisguise<?> disguise = optPlayerDisguise.get();
-        this.hideDisguiseForPlayersInWorld(disguise, showPlayerAfterRemoval); // this will remove the disguise entities & make players visible again
+
+        // we can just call the trackers a() (destroyForAll()) method because our custom tracker is handling packet work for us
+        if (packetHandlingType == PacketHandlingType.CHAD_FEATHER_TRACKER) {
+            DisguiseUtil.handleEntityTrackerUpdateOrSpawnForAllMethodCallForDisguisedPlayer(player, showPlayerAfterRemoval);
+            // setting the flag to FALSE prevents the tracker from attempting to respawn back in the player entity
+        }
+
+        // packet handling type --> interceptors, call our regular method
+        else this.hideDisguiseForPlayersInWorld(disguise, showPlayerAfterRemoval); // this will remove the disguise entities & make players visible again
 
         // remove any hittable related entityID data
         if (disguiseHittableData != null) {
@@ -218,11 +251,13 @@ public class DisguiseAPI implements ITeardown {
             //      if the disguise was 'hard hidden' we don't have to worry because their client already doesn't have the player visible)
             if (disguise.doesViewingPlayerMatchMarkerType(viewer, ViewType.CANNOT_SEE_DISGUISE)) {
                 PacketUtil.sendPacketEventsPacket(viewer, destroyPlayerPacket, true);
+                log.info("===== player entity destroyed");
             }
 
             // [2] send spawning packets for all our disguise related entities, now the viewing client can see the disguise!
             if (!disguise.doesViewingPlayerMatchMarkerType(viewer, ViewType.CAN_SEE_DISGUISE)) {
                 PacketUtil.sendPacketEventsPackets(viewer, spawningPackets, true);
+                log.info("===== disguise related entities spawned");
             }
 
             // [3] flag the viewer as now being able to "see" the disguise (so distributors can handle packet work)
@@ -280,6 +315,8 @@ public class DisguiseAPI implements ITeardown {
     public void hideDisguiseForPlayers(@NotNull AbstractDisguise<?> disguise, @NotNull List<Player> viewingPlayers, boolean showPlayerAfterHiding) {
         if (viewingPlayers.isEmpty()) return; // why... why would u do dis to me
 
+        log.info("directly called hidedisguise() method");
+
         // optimisation: if we AREN'T showing the owning player entity after removing the disguise entities &
         //               ALL viewers already have the disguise marked as 'hidden', don't bother creating packets.
         boolean shouldContinue = false;
@@ -316,6 +353,7 @@ public class DisguiseAPI implements ITeardown {
             // [1] disguise & all related entities are now removed from the viewers client
             if (!isAlreadyHidden) {
                 PacketUtil.sendPacketEventsPacket(viewer, destroyPacket, true);
+                log.info("===== disguise related entities destroyed");
             }
 
             // [2] if flag is true, player is now restored back to the viewers client
@@ -324,6 +362,7 @@ public class DisguiseAPI implements ITeardown {
             //      re-sending them player packets again, so if we can, just skip this section.
             if (showPlayerAfterHiding && spawningPackets != null && disguise.doesViewingPlayerMatchMarkerType(viewer, ViewType.CANNOT_SEE_DISGUISE)) {
                 PacketUtil.sendPacketEventsPackets(viewer, spawningPackets, true);
+                log.info("===== player entity spawned back in");
             }
 
             // [3] update the marker to correctly reflect the viewers situation with the disguise (ALWAYS DO THIS LAST, AFTER SENDING PACKETS)
@@ -342,6 +381,7 @@ public class DisguiseAPI implements ITeardown {
 
         // remove any disguise entities -> re-send packets for spawning
         final AbstractDisguise<?> disguise = optDisguise.get();
+        // todo tracker implementation updatePlayer() here
         this.hideDisguiseForPlayer(disguise, observer, false);
         this.showDisguiseForPlayer(disguise, observer);
     }
@@ -491,6 +531,11 @@ public class DisguiseAPI implements ITeardown {
             disguiseListenerDistributor.teardown();
         }
 
+        if (disguiseTrackerListener != null) {
+            disguiseTrackerListener.teardown();
+        }
+
         disguiseListenerDistributor = null;
+        disguiseTrackerListener = null;
     }
 }

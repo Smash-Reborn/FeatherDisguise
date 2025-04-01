@@ -2,7 +2,6 @@ package org.reborn.FeatherDisguise.util;
 
 import com.github.retrooper.packetevents.PacketEvents;
 import com.github.retrooper.packetevents.wrapper.PacketWrapper;
-import com.google.common.base.Preconditions;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -21,7 +20,8 @@ public class PacketUtil {
      * <p>The method will fail if the {@code precondition} {@link Player#isValid()} returns {@code false}.</p>
      * **/
     public static void sendNMSPacket(@NotNull final Player player, @NotNull final Packet<?> packet) {
-        Preconditions.checkArgument(player.isValid(), "Player " + "(" + player.getName() + ") is invalid or not online. Unable to send NMS packet");
+        if (!player.isValid() || !player.isOnline()) return;
+
         try {
             ((CraftPlayer) player).getHandle().playerConnection.sendPacket(packet);
         } catch (Throwable th) {
@@ -43,7 +43,8 @@ public class PacketUtil {
      * @param sendSilently determines whether the packet will be 'listenable' by {@code PacketEvents} interceptors.
      * **/
     public static void sendPacketEventsPacket(@NotNull final Player player, @NotNull final PacketWrapper<?> packet, final boolean sendSilently) {
-        Preconditions.checkArgument(player.isValid(), "Player " + "(" + player.getName() + ") is invalid or not online. Unable to send PacketEvent packet");
+        if (!player.isValid() || !player.isOnline()) return;
+
         if (!sendSilently) {
             PacketEvents.getAPI().getPlayerManager().sendPacket(player, packet);
         }

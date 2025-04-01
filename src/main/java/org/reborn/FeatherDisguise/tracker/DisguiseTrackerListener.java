@@ -1,5 +1,6 @@
 package org.reborn.FeatherDisguise.tracker;
 
+import lombok.extern.log4j.Log4j2;
 import net.minecraft.server.v1_8_R3.World;
 import net.minecraft.server.v1_8_R3.WorldServer;
 import org.bukkit.craftbukkit.v1_8_R3.CraftWorld;
@@ -18,6 +19,7 @@ import org.reborn.FeatherDisguise.util.ITeardown;
 import java.util.HashMap;
 import java.util.Iterator;
 
+@Log4j2
 public class DisguiseTrackerListener implements Listener, ITeardown {
 
     @ApiStatus.Internal
@@ -28,20 +30,32 @@ public class DisguiseTrackerListener implements Listener, ITeardown {
     public DisguiseTrackerListener(@NotNull final FeatherDisguise featherDisguise) {
         this.featherDisguise = featherDisguise;
         featherDisguise.getServer().getPluginManager().registerEvents(this, featherDisguise);
+        this.implementFeatherEntityTrackerForNMSWorld(featherDisguise.getServer().getWorlds().get(0));
+
+        // todo:
+        //  - removeDisguise command doesn't show player when removeDisguise() is called even though it should
+        //  - arrows sometimes incorrectly positioned on the ground
     }
 
-    @EventHandler(priority = EventPriority.MONITOR)
-    public void onWorldInitializeHandleReplacingWithCustomEntityTracker(final WorldInitEvent e) {
+    @ApiStatus.Internal
+    private void implementFeatherEntityTrackerForNMSWorld(@NotNull final org.bukkit.World bukkitWorld) {
         if (worldsHandledByCustomTracker == null) {
             worldsHandledByCustomTracker = new HashMap<>();
         }
 
         // get the NMS world, create our custom tracker and override
         // (because we do this within the WorldInitEvent, there will never be any entities existing within that tracker, so it's fine to replace it)
-        final WorldServer nmsWorld = ((CraftWorld) e.getWorld()).getHandle();
+        final WorldServer nmsWorld = ((CraftWorld) bukkitWorld).getHandle();
         final FeatherEntityTracker featherEntityTracker = new FeatherEntityTracker(featherDisguise, nmsWorld);
         nmsWorld.tracker = featherEntityTracker;
         worldsHandledByCustomTracker.put(nmsWorld, featherEntityTracker);
+
+        log.info("World (Name: {}) has been injected with the FeatherDisguise custom entity tracker", nmsWorld.getWorld().getName());
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR)
+    public void onWorldInitializeHandleReplacingWithCustomEntityTracker(final WorldInitEvent e) {
+        this.implementFeatherEntityTrackerForNMSWorld(e.getWorld());
     }
 
     @EventHandler(priority = EventPriority.MONITOR)

@@ -6,12 +6,18 @@ import com.github.retrooper.packetevents.wrapper.PacketWrapper;
 import com.github.retrooper.packetevents.wrapper.play.server.*;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
+import net.minecraft.server.v1_8_R3.EntityPlayer;
+import net.minecraft.server.v1_8_R3.EntityTracker;
+import net.minecraft.server.v1_8_R3.EntityTrackerEntry;
+import net.minecraft.server.v1_8_R3.IntHashMap;
 import org.bukkit.Location;
 import org.bukkit.craftbukkit.v1_8_R3.CraftWorld;
+import org.bukkit.craftbukkit.v1_8_R3.entity.CraftPlayer;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.reborn.FeatherDisguise.enums.DisguiseType;
+import org.reborn.FeatherDisguise.tracker.FeatherEntityTracker;
 import org.reborn.FeatherDisguise.types.AbstractDisguise;
 
 import java.util.*;
@@ -56,6 +62,43 @@ public class DisguiseUtil {
         allPlayers.remove(toExclude);
         return allPlayers;
     }
+
+    public static void handleEntityTrackerUpdateOrSpawnForAllMethodCallForDisguisedPlayer(@NotNull Player disguisedPlayer, boolean isShowingBaseEntity) {
+        final EntityPlayer nmsPlayer = ((CraftPlayer) disguisedPlayer).getHandle();
+        final EntityTracker entityTracker = ((CraftWorld) disguisedPlayer.getWorld()).getHandle().tracker;
+
+        if (entityTracker instanceof FeatherEntityTracker) {
+            ((FeatherEntityTracker) entityTracker).checkForTrackedEntityAndUpdateOrSpawnForAllViewers(nmsPlayer, getPlayersInWorldExcluding(disguisedPlayer), isShowingBaseEntity);
+        }
+
+        // technically if it's a normal tracker, it wouldn't be able to handle our spawns anyway, so attempting to
+        // manually call it is actually pointless. this method should only be called if the PacketHandlingType == TRACKER
+        // so hopefully that won't fuck anything up in the future...
+    }
+
+//    public static void handleEntityTrackerDestroyForAllMethodCallForDisguisedPlayer(@NotNull Player disguisedPlayer) {
+//        final EntityPlayer nmsPlayer = ((CraftPlayer) disguisedPlayer).getHandle();
+//        final EntityTracker entityTracker = ((CraftWorld) disguisedPlayer.getWorld()).getHandle().tracker;
+//
+//        if (entityTracker instanceof FeatherEntityTracker) {
+//            ((FeatherEntityTracker) entityTracker).checkForTrackedEntityAndSendDestroysForAllViewers(nmsPlayer, getPlayersInWorldExcluding(disguisedPlayer));
+//        }
+//
+//        // :sigh: gotta do it the ol fashioned manual way
+//        else {
+//            final IntHashMap<EntityTrackerEntry> superclassTrackedEntities = entityTracker.trackedEntities;
+//            if (superclassTrackedEntities == null) return;
+//            if (!superclassTrackedEntities.b(nmsPlayer.getId())) return;
+//
+//            final Set<EntityPlayer> superclassViewingPlayers = superclassTrackedEntities.get(nmsPlayer.getId()).trackedPlayers;
+//
+//            if (!superclassViewingPlayers.isEmpty()) {
+//                for (final EntityPlayer superclassViewingPlayer : superclassViewingPlayers) {
+//                    superclassTrackedEntities.get(nmsPlayer.getId()).clear(superclassViewingPlayer);
+//                }
+//            }
+//        }
+//    }
 
     /** @return {@code true} if the {@link DisguiseType} is able to render items in the hand-slots. **/
     public static boolean isDisguiseAbleToRenderItemsInHandSlots(@NotNull DisguiseType disguiseType) {

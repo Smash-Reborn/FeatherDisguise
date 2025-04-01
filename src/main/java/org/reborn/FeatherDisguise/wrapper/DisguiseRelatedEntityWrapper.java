@@ -187,6 +187,24 @@ public class DisguiseRelatedEntityWrapper<E extends AbstractMetadataHolder<?>> {
         return new WrapperPlayServerDestroyEntities(this.owningDisguise.getOwningBukkitPlayer().getEntityId());
     }
 
+    @NotNull public WrapperPlayServerEntityMetadata updateRelevantFieldsAndReturnMetadataPacketForBaseEntity() {
+        final EntityPlayer nmsDisguiseOwner = ((CraftPlayer) owningDisguise.getOwningBukkitPlayer()).getHandle();
+
+        // update relevant metadata fields for the base disguise entity
+        baseDisguiseEntity.getMetadataHolder().setOnFire(nmsDisguiseOwner.isBurning());
+        baseDisguiseEntity.getMetadataHolder().setSneaking(nmsDisguiseOwner.isSneaking());
+        baseDisguiseEntity.getMetadataHolder().setSprinting(nmsDisguiseOwner.isSprinting());
+        baseDisguiseEntity.getMetadataHolder().setPerformingAction((nmsDisguiseOwner.getDataWatcher().getByte(0) & 1 << AbstractMetadataHolder.EntityBitMaskType.IS_DOING_ACTION.getBitID()) != 0);
+        baseDisguiseEntity.getMetadataHolder().setInvisible(nmsDisguiseOwner.isInvisible());
+
+        final Optional<List<EntityData>> optListConstructedMetadata = baseDisguiseEntity.getMetadataHolder().getConstructedListOfMetadata();
+        if (!optListConstructedMetadata.isPresent()) {
+            throw new DisguiseMetadataException("Failed to retrieve constructed list of metadata");
+        }
+
+        return new WrapperPlayServerEntityMetadata(baseDisguiseEntity.getVirtualID(), optListConstructedMetadata.get());
+    }
+
     public void sendUpdateMetadataForBaseDisguiseEntityToAllViewingPlayers() {
         final Optional<List<EntityData>> optMetadata = this.baseDisguiseEntity.getMetadataHolder().getConstructedListOfMetadata();
         if (!optMetadata.isPresent()) {

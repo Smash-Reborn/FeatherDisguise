@@ -12,6 +12,7 @@ import org.reborn.FeatherDisguise.commands.CommandDisguise;
 import org.reborn.FeatherDisguise.commands.CommandDisguiseList;
 import org.reborn.FeatherDisguise.commands.CommandRefreshDisguise;
 import org.reborn.FeatherDisguise.commands.CommandRemoveDisguise;
+import org.reborn.FeatherDisguise.enums.PacketHandlingType;
 import org.reborn.FeatherDisguise.metadata.CachedEntityTypes;
 import org.reborn.FeatherDisguise.util.Constants;
 
@@ -45,8 +46,9 @@ public class FeatherDisguise extends JavaPlugin {
             log.info(Constants.formattedNeutralText("Now enabling " + ColorUtil.toString(NamedTextColor.AQUA) + Constants.PLUGIN_NAME + " " + ColorUtil.toString(NamedTextColor.WHITE) + "plugin"));
             plugin = this;
             staticInstance = this;
+            PacketEvents.getAPI().getSettings().checkForUpdates(false); // todo why does this not work AHHHHHHHHHHH
             PacketEvents.getAPI().init();
-            disguiseAPI = new DisguiseAPI(this);
+            disguiseAPI = new DisguiseAPI(this, PacketHandlingType.CHAD_FEATHER_TRACKER); // todo config file with swappable type
             cachedEntityTypes = new CachedEntityTypes();
             this.registerCommands();
             log.info(Constants.formattedPositiveText("Successfully enabled " + ColorUtil.toString(NamedTextColor.GREEN) + Constants.PLUGIN_NAME + " " + ColorUtil.toString(NamedTextColor.WHITE) + "plugin"));
