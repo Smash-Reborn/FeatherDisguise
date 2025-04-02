@@ -8,6 +8,7 @@ import lombok.extern.log4j.Log4j2;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.ApiStatus;
+import org.jetbrains.annotations.NotNull;
 import org.reborn.FeatherDisguise.commands.CommandDisguise;
 import org.reborn.FeatherDisguise.commands.CommandDisguiseList;
 import org.reborn.FeatherDisguise.commands.CommandRefreshDisguise;
@@ -23,7 +24,7 @@ public class FeatherDisguise extends JavaPlugin {
 
     @Getter private static FeatherDisguise staticInstance; // godly cringe but im lazy af
 
-    @Getter private DisguiseAPI disguiseAPI;
+    private DisguiseAPI disguiseAPI; // use provided getter instead, not lombok
 
     @Getter private CachedEntityTypes cachedEntityTypes;
 
@@ -62,10 +63,10 @@ public class FeatherDisguise extends JavaPlugin {
     public void onDisable() {
         try {
             log.info(Constants.formattedNeutralText("Now disabling " + ColorUtil.toString(NamedTextColor.AQUA) + Constants.PLUGIN_NAME + " " + ColorUtil.toString(NamedTextColor.WHITE) + "plugin"));
-            disguiseAPI.teardown();
-            disguiseAPI = null;
             cachedEntityTypes.teardown();
             cachedEntityTypes = null;
+            disguiseAPI.teardown();
+            disguiseAPI = null;
             PacketEvents.getAPI().terminate();
             plugin = null;
             log.info(Constants.formattedPositiveText("Successfully disabled " + ColorUtil.toString(NamedTextColor.GREEN) + Constants.PLUGIN_NAME + " " + ColorUtil.toString(NamedTextColor.WHITE) + "plugin"));
@@ -82,5 +83,10 @@ public class FeatherDisguise extends JavaPlugin {
         plugin.getServer().getPluginCommand("removedisguise").setExecutor(new CommandRemoveDisguise());
         plugin.getServer().getPluginCommand("disguiselist").setExecutor(new CommandDisguiseList());
         plugin.getServer().getPluginCommand("refreshdisguise").setExecutor(new CommandRefreshDisguise());
+    }
+
+    @NotNull public DisguiseAPI getDisguiseAPI() {
+        if (disguiseAPI == null) throw new NullPointerException("DisguiseAPI is invalid or null");
+        return disguiseAPI;
     }
 }

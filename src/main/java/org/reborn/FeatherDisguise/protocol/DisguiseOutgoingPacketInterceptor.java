@@ -20,6 +20,7 @@ public class DisguiseOutgoingPacketInterceptor extends SimplePacketListenerAbstr
 
     // todo
     //  - the only lead i have on this bug so far is its got something to do with spawn/destroy packets & spectator mode (maybe the plyaerInfo packet too?)
+    //    (this only relates to interceptor mode, tracker mode doesn't have these issues)
 
 
     /* Server -> Client
@@ -29,7 +30,7 @@ public class DisguiseOutgoingPacketInterceptor extends SimplePacketListenerAbstr
         if (e.isCancelled()) return;
 
         // if the packets getting sent are not the ones we are handling, exit early here
-        if (!DisguiseUtil.isAllowedToHandleOutgoingPacketInterception(e)) return;
+        if (!DisguiseUtil.isAllowedToHandleOutgoingPacketInterception(e, disguiseListenerDistributor.getFeatherDisguise().getDisguiseAPI().getPacketHandlingType())) return;
 
         // player(s) who will receive the packet
         // (assume that receivers will be everyone who in the NMS entity tracker can "see" the owningPlayer (one who is disguised))

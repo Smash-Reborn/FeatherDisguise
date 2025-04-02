@@ -8,8 +8,6 @@ import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import net.minecraft.server.v1_8_R3.EntityPlayer;
 import net.minecraft.server.v1_8_R3.EntityTracker;
-import net.minecraft.server.v1_8_R3.EntityTrackerEntry;
-import net.minecraft.server.v1_8_R3.IntHashMap;
 import org.bukkit.Location;
 import org.bukkit.craftbukkit.v1_8_R3.CraftWorld;
 import org.bukkit.craftbukkit.v1_8_R3.entity.CraftPlayer;
@@ -17,6 +15,7 @@ import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.reborn.FeatherDisguise.enums.DisguiseType;
+import org.reborn.FeatherDisguise.enums.PacketHandlingType;
 import org.reborn.FeatherDisguise.tracker.FeatherEntityTracker;
 import org.reborn.FeatherDisguise.types.AbstractDisguise;
 
@@ -63,17 +62,46 @@ public class DisguiseUtil {
         return allPlayers;
     }
 
-    public static void handleEntityTrackerUpdateOrSpawnForAllMethodCallForDisguisedPlayer(@NotNull Player disguisedPlayer, boolean isShowingBaseEntity) {
+    /** Ensures the current {@link org.bukkit.World} for the provided player utilises our {@link FeatherEntityTracker}
+     * and method attempts to remove clients from the trackers view list, then re-send spawning packets exclusively for the {@code disguise}.
+     * **/
+    public static void handleEntityTrackerRemoveSingularPlayerEntityAndReplaceWithDisguise(@NotNull Player disguisedPlayer) {
         final EntityPlayer nmsPlayer = ((CraftPlayer) disguisedPlayer).getHandle();
         final EntityTracker entityTracker = ((CraftWorld) disguisedPlayer.getWorld()).getHandle().tracker;
 
         if (entityTracker instanceof FeatherEntityTracker) {
-            ((FeatherEntityTracker) entityTracker).checkForTrackedEntityAndUpdateOrSpawnForAllViewers(nmsPlayer, getPlayersInWorldExcluding(disguisedPlayer), isShowingBaseEntity);
+            ((FeatherEntityTracker) entityTracker).checkForTrackedEntityAndRemoveBaseEntity(nmsPlayer, getPlayersInWorldExcluding(disguisedPlayer));
+        }
+    }
+
+    /** Ensures the current {@link org.bukkit.World} for the provided player utilises our {@link FeatherEntityTracker}
+     * and method attempts to send destroy packets for the player. (can either be a singular destroy for just their player
+     * entity OR can be a destroy for all {@code disguise} related entities)
+     * **/
+    public static void handleEntityTrackerUpdateAndDestroyAllRelevantEntities(@NotNull Player disguisedPlayer) {
+        final EntityPlayer nmsPlayer = ((CraftPlayer) disguisedPlayer).getHandle();
+        final EntityTracker entityTracker = ((CraftWorld) disguisedPlayer.getWorld()).getHandle().tracker;
+
+        if (entityTracker instanceof FeatherEntityTracker) {
+            ((FeatherEntityTracker) entityTracker).checkForTrackedEntityAndDestroyAllRelevantEntities(nmsPlayer);
         }
 
         // technically if it's a normal tracker, it wouldn't be able to handle our spawns anyway, so attempting to
         // manually call it is actually pointless. this method should only be called if the PacketHandlingType == TRACKER
         // so hopefully that won't fuck anything up in the future...
+    }
+
+    /** Ensures the current {@link org.bukkit.World} for the provided player utilises our {@link FeatherEntityTracker}
+     * and method attempts to re-send spawning packets for the player. (can either be a group of spawning packets for just
+     * their player entity OR can be a group of spawning packets for all {@code disguise} related entities)
+     * **/
+    public static void handleEntityTrackerUpdateAndRescanForAllRelevantEntities(@NotNull Player disguisedPlayer, boolean isShowingBaseEntity) {
+        final EntityPlayer nmsPlayer = ((CraftPlayer) disguisedPlayer).getHandle();
+        final EntityTracker entityTracker = ((CraftWorld) disguisedPlayer.getWorld()).getHandle().tracker;
+
+        if (entityTracker instanceof FeatherEntityTracker) {
+            ((FeatherEntityTracker) entityTracker).checkForTrackedEntityAndRescanForDisguises(nmsPlayer, getPlayersInWorldExcluding(disguisedPlayer), isShowingBaseEntity);
+        }
     }
 
 //    public static void handleEntityTrackerDestroyForAllMethodCallForDisguisedPlayer(@NotNull Player disguisedPlayer) {
@@ -153,24 +181,46 @@ public class DisguiseUtil {
         }
     }
 
-    /** @return {@code true} if the {@link PacketPlaySendEvent#getPacketType()} is allowed to be handled by one of our interceptors. **/
-    public static boolean isAllowedToHandleOutgoingPacketInterception(@NotNull final PacketPlaySendEvent e) {
-        switch (e.getPacketType()) {
-            default:
-                return false;
-            case ENTITY_RELATIVE_MOVE_AND_ROTATION:
-            case ENTITY_RELATIVE_MOVE:
-            case ENTITY_ROTATION:
-            case ENTITY_TELEPORT:
-            case ENTITY_HEAD_LOOK:
-            case ENTITY_ANIMATION:
-            case ENTITY_EQUIPMENT:
-            case ENTITY_METADATA:
-            case ENTITY_VELOCITY:
-            case ATTACH_ENTITY:
-            case SPAWN_PLAYER:
-            case DESTROY_ENTITIES:
-                return true;
+    /** @return {@code true} if the {@link PacketPlaySendEvent#getPacketType()} is allowed to be handled by one of our interceptors.
+     * @apiNote
+     * Depending on the {@link PacketHandlingType} will determine which packets are allowed to be intercepted and handled.
+     * If {@link PacketHandlingType#VIRGIN_PACKET_INTERCEPTION} then all relevant packets will be handled. However, if the plugin
+     * is only using {@link PacketHandlingType#CHAD_FEATHER_TRACKER} then only non-tracker related packets get handled.
+     * **/
+    public static boolean isAllowedToHandleOutgoingPacketInterception(@NotNull final PacketPlaySendEvent e, @NotNull final PacketHandlingType packetHandlingType) {
+
+        // PACKET INTERCEPTOR ALLOWED
+        if (packetHandlingType == PacketHandlingType.VIRGIN_PACKET_INTERCEPTION) {
+            switch (e.getPacketType()) {
+                default:
+                    return false;
+                case ENTITY_RELATIVE_MOVE_AND_ROTATION:
+                case ENTITY_RELATIVE_MOVE:
+                case ENTITY_ROTATION:
+                case ENTITY_TELEPORT:
+                case ENTITY_HEAD_LOOK:
+                case ENTITY_ANIMATION:
+                case ENTITY_EQUIPMENT:
+                case ENTITY_METADATA:
+                case ENTITY_VELOCITY:
+                case ATTACH_ENTITY:
+                case SPAWN_PLAYER:
+                case DESTROY_ENTITIES:
+                    return true;
+            }
+        }
+
+        // ENTITY TRACKER ALLOWED
+        else {
+            switch (e.getPacketType()) {
+                default:
+                    return false;
+                case ENTITY_VELOCITY:
+                case ENTITY_ANIMATION:
+                case ENTITY_EQUIPMENT:
+                case ATTACH_ENTITY:
+                    return true;
+            }
         }
     }
 

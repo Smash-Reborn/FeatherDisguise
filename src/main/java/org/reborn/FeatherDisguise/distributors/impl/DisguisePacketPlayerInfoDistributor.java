@@ -9,6 +9,8 @@ import org.reborn.FeatherDisguise.distributors.DisguiseListenerDistributor;
 import org.reborn.FeatherDisguise.distributors.IDisguisePacketDistributor;
 import org.reborn.FeatherDisguise.types.AbstractDisguise;
 
+/* not used atm but kept just in case for de-bugging */
+@Deprecated
 public class DisguisePacketPlayerInfoDistributor implements IDisguisePacketDistributor {
 
     @Override

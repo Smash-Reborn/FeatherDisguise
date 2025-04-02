@@ -302,10 +302,13 @@ public class FeatherEntityTrackerEntry extends EntityTrackerEntry {
                         this.j = tracker.motX;
                         this.k = tracker.motY;
                         this.l = tracker.motZ;
-                        // this.broadcast(velocityPacket); // todo would do this before, but it's kinda dumb, like, pos/sync should be done first then velocity (?)
 
                         if (disguisedEntity == null) {
-                            packetsToSend.add(new PacketPlayOutEntityVelocity(tracker.getId(), this.j, this.k, this.l));
+                            this.broadcast(new PacketPlayOutEntityVelocity(tracker.getId(), this.j, this.k, this.l));
+                            // for this specific case, velocity must be sent first. do not put into the packet list.
+                            // this is a bug carried over from the superclass, where sending velocity post pos update
+                            // causes certain entities (like arrows) to become de-synchronised from their positions clientside -> serverside.
+                            // not sure the best way to fix this, but for now doing it this way parodies how the tracker previously would work
                         }
 
                         else {
@@ -448,8 +451,6 @@ public class FeatherEntityTrackerEntry extends EntityTrackerEntry {
                 // [!] add them to the tracked set, they are now considered as having been sent SPAWNING packets
                 trackedPlayers.add(entityPlayer);
 
-                log.info("---> added entity player back into trackedset, since they didn't exist in it");
-
                 // now handle sending relevant spawning packet(s)
                 // (either it will be disguise related packets or vanilla behavior)
                 this.handleSpawningPacketsForTrackedEntity(entityPlayer, allowSpawningBasicEntity);
@@ -477,7 +478,8 @@ public class FeatherEntityTrackerEntry extends EntityTrackerEntry {
 
     // my spicy method for doing scanPlayers() with the list of EntityPlayer
     // (because the stupid tracking method creates new arrays every tick with the same trackedPlayers list and that's just retarded)
-    public void s_scanPlayers(@NotNull final Set<EntityPlayer> setPlayers) {
+    @ApiStatus.Internal
+    private void s_scanPlayers(@NotNull final Set<EntityPlayer> setPlayers) {
         if (setPlayers.isEmpty()) return; // optimisation: don't bother if the list is empty, waste of process
 
         for (final EntityPlayer playerViewer : setPlayers) {
@@ -594,14 +596,10 @@ public class FeatherEntityTrackerEntry extends EntityTrackerEntry {
             featherDisguise.getDisguiseAPI().getPlayerDisguise(((EntityPlayer) tracker).getBukkitEntity())
                     .ifPresent(disguise ->
                             featherDisguise.getDisguiseAPI().hideDisguiseForPlayer(disguise, viewer.getBukkitEntity(), false));
-            log.info("---> has valid disguise, calling hideDisguise() method");
         }
 
         // else assume not a disguised player, handle destroys like normal superclass
-        else {
-            log.info("---> not disguised, so sent destroy for the singular tracked entity (player entity)");
-            viewer.d(tracker); // removeEntity()
-        }
+        else {viewer.d(tracker);} // removeEntity()
     }
 
     // sendDestroyEntityPacketToTrackedPlayers()
@@ -622,8 +620,6 @@ public class FeatherEntityTrackerEntry extends EntityTrackerEntry {
             this.determineAndDestroyEntity(viewersIter.next());
             viewersIter.remove();
         }
-
-        log.info("sentdestorys and cleared tracked players, list size: {}", trackedPlayers.size());
     }
 
     // removeFromTrackedPlayers()
@@ -635,6 +631,19 @@ public class FeatherEntityTrackerEntry extends EntityTrackerEntry {
 
         trackedPlayers.remove(entityPlayer);
         this.determineAndDestroyEntity(entityPlayer);
+    }
+
+    public void removeBaseEntityFromTrackedPlayers(@NotNull final List<Player> players) {
+        if (players.isEmpty()) return;
+
+        for (final Player viewerPlayer : players) {
+            final EntityPlayer nmsPlayer = ((CraftPlayer) viewerPlayer).getHandle();
+
+            if (!trackedPlayers.contains(nmsPlayer)) continue;
+
+            trackedPlayers.remove(nmsPlayer);
+            nmsPlayer.d(tracker);
+        }
     }
 
     @Override

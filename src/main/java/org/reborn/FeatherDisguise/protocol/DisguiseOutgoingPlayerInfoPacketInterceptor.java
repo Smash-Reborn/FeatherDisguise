@@ -6,7 +6,6 @@ import com.github.retrooper.packetevents.protocol.packettype.PacketType;
 import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerPlayerInfo;
 import lombok.AllArgsConstructor;
 import lombok.extern.log4j.Log4j2;
-import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.reborn.FeatherDisguise.distributors.DisguiseListenerDistributor;
@@ -15,6 +14,8 @@ import org.reborn.FeatherDisguise.types.AbstractDisguise;
 import java.util.List;
 import java.util.Optional;
 
+/* not needed atm, but kept just in case for de-bugging purposes */
+@Deprecated
 @AllArgsConstructor @Log4j2
 public class DisguiseOutgoingPlayerInfoPacketInterceptor extends SimplePacketListenerAbstract {
 

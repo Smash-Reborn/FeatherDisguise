@@ -31,10 +31,8 @@ public class DisguiseTrackerListener implements Listener, ITeardown {
         this.featherDisguise = featherDisguise;
         featherDisguise.getServer().getPluginManager().registerEvents(this, featherDisguise);
         this.implementFeatherEntityTrackerForNMSWorld(featherDisguise.getServer().getWorlds().get(0));
-
-        // todo:
-        //  - removeDisguise command doesn't show player when removeDisguise() is called even though it should
-        //  - arrows sometimes incorrectly positioned on the ground
+        // when this class is initialized (assuming during plugin load), we need to ensure the initial
+        // world that gets loaded also utilises our custom tracker, else disguises won't work in that world
     }
 
     @ApiStatus.Internal

@@ -195,7 +195,7 @@ public class DisguiseRelatedEntityWrapper<E extends AbstractMetadataHolder<?>> {
         baseDisguiseEntity.getMetadataHolder().setSneaking(nmsDisguiseOwner.isSneaking());
         baseDisguiseEntity.getMetadataHolder().setSprinting(nmsDisguiseOwner.isSprinting());
         baseDisguiseEntity.getMetadataHolder().setPerformingAction((nmsDisguiseOwner.getDataWatcher().getByte(0) & 1 << AbstractMetadataHolder.EntityBitMaskType.IS_DOING_ACTION.getBitID()) != 0);
-        baseDisguiseEntity.getMetadataHolder().setInvisible(nmsDisguiseOwner.isInvisible());
+        baseDisguiseEntity.getMetadataHolder().setInvisible(nmsDisguiseOwner.isInvisible() || nmsDisguiseOwner.isSpectator());
 
         final Optional<List<EntityData>> optListConstructedMetadata = baseDisguiseEntity.getMetadataHolder().getConstructedListOfMetadata();
         if (!optListConstructedMetadata.isPresent()) {

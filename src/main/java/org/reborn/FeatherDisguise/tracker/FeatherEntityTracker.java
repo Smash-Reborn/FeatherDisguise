@@ -280,17 +280,34 @@ public class FeatherEntityTracker extends EntityTracker implements ITeardown {
         }
     }
 
-    public void checkForTrackedEntityAndUpdateOrSpawnForAllViewers(@NotNull final Entity trackedEntity, @NotNull final List<Player> players, final boolean isShowingBaseEntity) {
+    public void checkForTrackedEntityAndRemoveBaseEntity(@NotNull final Entity trackedEntity, @NotNull final List<Player> players) {
+        Preconditions.checkNotNull(trackedObjects, "Tracked hashmap for feather entity tracker is invalid or null. Unable to check for tracked entity");
+        if (!trackedObjects.containsKey(trackedEntity.getId())) return;
+        trackedObjects.get(trackedEntity.getId()).removeBaseEntityFromTrackedPlayers(players);
+        trackedObjects.get(trackedEntity.getId()).disguiseHandled_ScanPlayers(players, false);
+        // [1] specifically destroys the player entity and removes all provided players from the viewers set
+        // [2] calls scan() which loops through the provided list of players and attempts to show specifically the disguise entities (& adds the viewers back into the set)
+    }
+
+    public void checkForTrackedEntityAndDestroyAllRelevantEntities(@NotNull final Entity trackedEntity) {
         Preconditions.checkNotNull(trackedObjects, "Tracked hashmap for feather entity tracker is invalid or null. Unable to check and handle updates/adds");
         if (!trackedObjects.containsKey(trackedEntity.getId())) return;
         trackedObjects.get(trackedEntity.getId()).sendDestroyAndClearTrackedPlayers();
+        // destroys either the player tracked entity OR the disguise tracked entities (also removed from the viewers set)
+    }
+
+    public void checkForTrackedEntityAndRescanForDisguises(@NotNull final Entity trackedEntity, @NotNull final List<Player> players, final boolean isShowingBaseEntity) {
+        Preconditions.checkNotNull(trackedObjects, "Tracked hashmap for feather entity tracker is invalid or null. Unable to check and handle updates/adds");
+        if (!trackedObjects.containsKey(trackedEntity.getId())) return;
         trackedObjects.get(trackedEntity.getId()).disguiseHandled_ScanPlayers(players, isShowingBaseEntity);
-        // [1] destroys either the player tracked entity OR the disguise tracked entities (also removed from the viewers set)
-        // [2] calls scan() which loops through the provided list of players and attempts to spawn back in the relevant entity(ies) & adds the viewer back to the set
+        // loops through all provided players and will call updatePlayer() individually (which will either sent spawning packets for the player entity OR disguise entities)
     }
 
     @Override
     public void teardown() {
-        // todo figure this out>>>>
+        trackedObjects.clear();
+        trackedEntities.c();
+        // teardown is called only when the world is being unloaded,
+        // so we don't have to care about any packets or entities, just straight clear the data
     }
 }

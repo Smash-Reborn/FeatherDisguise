@@ -6,6 +6,7 @@ import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.ObjectIterator;
+import lombok.Getter;
 import lombok.extern.log4j.Log4j2;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.ApiStatus;
@@ -35,7 +36,7 @@ public class DisguiseAPI implements ITeardown {
     @ApiStatus.Internal
     @NotNull private final FeatherDisguise featherDisguise;
 
-    @NotNull private final PacketHandlingType packetHandlingType;
+    @Getter @NotNull private final PacketHandlingType packetHandlingType;
 
     private DisguiseListenerDistributor disguiseListenerDistributor;
 
@@ -66,7 +67,7 @@ public class DisguiseAPI implements ITeardown {
         // our custom tracker needs to take priority over raw calling the showDisguise() method
         // (tracker also calls this but passes through itself first in order to synchronise the data there)
         if (packetHandlingType == PacketHandlingType.CHAD_FEATHER_TRACKER) {
-            DisguiseUtil.handleEntityTrackerUpdateOrSpawnForAllMethodCallForDisguisedPlayer(player, false);
+            DisguiseUtil.handleEntityTrackerRemoveSingularPlayerEntityAndReplaceWithDisguise(player);
         }
 
         // packet handling type --> interceptors, call our regular method
@@ -145,8 +146,8 @@ public class DisguiseAPI implements ITeardown {
 
         // we can just call the trackers a() (destroyForAll()) method because our custom tracker is handling packet work for us
         if (packetHandlingType == PacketHandlingType.CHAD_FEATHER_TRACKER) {
-            DisguiseUtil.handleEntityTrackerUpdateOrSpawnForAllMethodCallForDisguisedPlayer(player, showPlayerAfterRemoval);
-            // setting the flag to FALSE prevents the tracker from attempting to respawn back in the player entity
+            DisguiseUtil.handleEntityTrackerUpdateAndDestroyAllRelevantEntities(player);
+            // call to the tracker here will remove the disguise entities
         }
 
         // packet handling type --> interceptors, call our regular method
@@ -161,6 +162,12 @@ public class DisguiseAPI implements ITeardown {
         // now finally remove them from the main disguise data (should probably assert but whatever this is safer)
         if (activeDisguiseData != null) {
             activeDisguiseData.remove(player.getEntityId());
+        }
+
+        // MUST BE CALLED AFTER DATA ABOVE IS REMOVED, so the tracker can correctly synchronise
+        if (packetHandlingType == PacketHandlingType.CHAD_FEATHER_TRACKER) {
+            DisguiseUtil.handleEntityTrackerUpdateAndRescanForAllRelevantEntities(player, showPlayerAfterRemoval);
+            // call to the tracker here will fix the viewers set & depending on the flag, re-show the player
         }
 
         // make sure we are correctly clearing our shit if we don't need it anymore
@@ -251,13 +258,11 @@ public class DisguiseAPI implements ITeardown {
             //      if the disguise was 'hard hidden' we don't have to worry because their client already doesn't have the player visible)
             if (disguise.doesViewingPlayerMatchMarkerType(viewer, ViewType.CANNOT_SEE_DISGUISE)) {
                 PacketUtil.sendPacketEventsPacket(viewer, destroyPlayerPacket, true);
-                log.info("===== player entity destroyed");
             }
 
             // [2] send spawning packets for all our disguise related entities, now the viewing client can see the disguise!
             if (!disguise.doesViewingPlayerMatchMarkerType(viewer, ViewType.CAN_SEE_DISGUISE)) {
                 PacketUtil.sendPacketEventsPackets(viewer, spawningPackets, true);
-                log.info("===== disguise related entities spawned");
             }
 
             // [3] flag the viewer as now being able to "see" the disguise (so distributors can handle packet work)
@@ -315,8 +320,6 @@ public class DisguiseAPI implements ITeardown {
     public void hideDisguiseForPlayers(@NotNull AbstractDisguise<?> disguise, @NotNull List<Player> viewingPlayers, boolean showPlayerAfterHiding) {
         if (viewingPlayers.isEmpty()) return; // why... why would u do dis to me
 
-        log.info("directly called hidedisguise() method");
-
         // optimisation: if we AREN'T showing the owning player entity after removing the disguise entities &
         //               ALL viewers already have the disguise marked as 'hidden', don't bother creating packets.
         boolean shouldContinue = false;
@@ -353,7 +356,6 @@ public class DisguiseAPI implements ITeardown {
             // [1] disguise & all related entities are now removed from the viewers client
             if (!isAlreadyHidden) {
                 PacketUtil.sendPacketEventsPacket(viewer, destroyPacket, true);
-                log.info("===== disguise related entities destroyed");
             }
 
             // [2] if flag is true, player is now restored back to the viewers client
@@ -362,7 +364,6 @@ public class DisguiseAPI implements ITeardown {
             //      re-sending them player packets again, so if we can, just skip this section.
             if (showPlayerAfterHiding && spawningPackets != null && disguise.doesViewingPlayerMatchMarkerType(viewer, ViewType.CANNOT_SEE_DISGUISE)) {
                 PacketUtil.sendPacketEventsPackets(viewer, spawningPackets, true);
-                log.info("===== player entity spawned back in");
             }
 
             // [3] update the marker to correctly reflect the viewers situation with the disguise (ALWAYS DO THIS LAST, AFTER SENDING PACKETS)
@@ -381,9 +382,18 @@ public class DisguiseAPI implements ITeardown {
 
         // remove any disguise entities -> re-send packets for spawning
         final AbstractDisguise<?> disguise = optDisguise.get();
-        // todo tracker implementation updatePlayer() here
-        this.hideDisguiseForPlayer(disguise, observer, false);
-        this.showDisguiseForPlayer(disguise, observer);
+
+        // utilise tracker based methods
+        if (packetHandlingType == PacketHandlingType.CHAD_FEATHER_TRACKER) {
+            DisguiseUtil.handleEntityTrackerUpdateAndDestroyAllRelevantEntities(disguisedPlayer);
+            DisguiseUtil.handleEntityTrackerUpdateAndRescanForAllRelevantEntities(disguisedPlayer, false);
+        }
+
+        // else assume handling with interceptors, so use direct method calls instead
+        else {
+            this.hideDisguiseForPlayer(disguise, observer, false);
+            this.showDisguiseForPlayer(disguise, observer);
+        }
     }
 
     public void refreshAllDisguisesForPlayer(@NotNull Player observer) {
@@ -392,8 +402,17 @@ public class DisguiseAPI implements ITeardown {
         // loop over all active disguises:
         // remove any disguise entities -> re-send packets for spawning
         for (final AbstractDisguise<?> disguise : this.activeDisguiseData.values()) {
-            this.hideDisguiseForPlayer(disguise, observer, false);
-            this.showDisguiseForPlayer(disguise, observer);
+
+            // same reason as the refreshDisguiseForPlayer() method
+            if (packetHandlingType == PacketHandlingType.CHAD_FEATHER_TRACKER) {
+                DisguiseUtil.handleEntityTrackerUpdateAndDestroyAllRelevantEntities(disguise.getOwningBukkitPlayer());
+                DisguiseUtil.handleEntityTrackerUpdateAndRescanForAllRelevantEntities(disguise.getOwningBukkitPlayer(), false);
+            }
+
+            else {
+                this.hideDisguiseForPlayer(disguise, observer, false);
+                this.showDisguiseForPlayer(disguise, observer);
+            }
         }
     }
 
@@ -490,7 +509,7 @@ public class DisguiseAPI implements ITeardown {
     @ApiStatus.Internal
     private void checkAndGeneratePacketHandlers() {
         if (disguiseListenerDistributor == null && activeDisguiseData != null && !activeDisguiseData.isEmpty()) {
-            disguiseListenerDistributor = new DisguiseListenerDistributor(featherDisguise);
+            disguiseListenerDistributor = new DisguiseListenerDistributor(featherDisguise, packetHandlingType);
         }
     }
 

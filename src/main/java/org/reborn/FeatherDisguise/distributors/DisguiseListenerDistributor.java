@@ -16,6 +16,7 @@ import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 import org.reborn.FeatherDisguise.FeatherDisguise;
 import org.reborn.FeatherDisguise.distributors.impl.*;
+import org.reborn.FeatherDisguise.enums.PacketHandlingType;
 import org.reborn.FeatherDisguise.protocol.DisguiseIncomingPacketInterceptor;
 import org.reborn.FeatherDisguise.protocol.DisguiseOutgoingPacketInterceptor;
 import org.reborn.FeatherDisguise.types.AbstractDisguise;
@@ -28,13 +29,17 @@ public class DisguiseListenerDistributor implements ITeardown, Listener {
 
     @Getter @NotNull private final FeatherDisguise featherDisguise;
 
+    @ApiStatus.Internal
+    @NotNull private final PacketHandlingType packetHandlingType;
+
     private HashMap<DisguisePacketDistributorType, IDisguisePacketDistributor> disguisePacketDistributors;
 
     private DisguiseOutgoingPacketInterceptor outgoingPacketInterceptor;
     private DisguiseIncomingPacketInterceptor incomingPacketInterceptor;
 
-    public DisguiseListenerDistributor(@NotNull final FeatherDisguise featherDisguise) {
+    public DisguiseListenerDistributor(@NotNull final FeatherDisguise featherDisguise, @NotNull final PacketHandlingType packetHandlingType) {
         this.featherDisguise = featherDisguise;
+        this.packetHandlingType = packetHandlingType;
         this.initializePacketDistributors();
 
         featherDisguise.getServer().getPluginManager().registerEvents(this, featherDisguise);
@@ -107,17 +112,23 @@ public class DisguiseListenerDistributor implements ITeardown, Listener {
 
     @ApiStatus.Internal
     private void initializePacketDistributors() {
-        this.disguisePacketDistributors = new HashMap<>(10);
-        this.disguisePacketDistributors.put(DisguisePacketDistributorType.RELATIVE_POSITION_ROTATION, new DisguisePacketPosRotDistributor());
-        this.disguisePacketDistributors.put(DisguisePacketDistributorType.TELEPORT_POSITION_ROTATION, new DisguisePacketTeleportDistributor());
-        this.disguisePacketDistributors.put(DisguisePacketDistributorType.HEAD_ROTATION, new DisguisePacketHeadRotDistributor());
+        this.disguisePacketDistributors = new HashMap<>(this.packetHandlingType == PacketHandlingType.VIRGIN_PACKET_INTERCEPTION ? 10 : 4);
+
+        // only allow these distributors to be loaded if we are fully using interceptors
+        if (this.packetHandlingType == PacketHandlingType.VIRGIN_PACKET_INTERCEPTION) {
+            this.disguisePacketDistributors.put(DisguisePacketDistributorType.RELATIVE_POSITION_ROTATION, new DisguisePacketPosRotDistributor());
+            this.disguisePacketDistributors.put(DisguisePacketDistributorType.TELEPORT_POSITION_ROTATION, new DisguisePacketTeleportDistributor());
+            this.disguisePacketDistributors.put(DisguisePacketDistributorType.HEAD_ROTATION, new DisguisePacketHeadRotDistributor());
+            this.disguisePacketDistributors.put(DisguisePacketDistributorType.METADATA, new DisguisePacketMetadataDistributor());
+            this.disguisePacketDistributors.put(DisguisePacketDistributorType.SPAWNING_PLAYER, new DisguisePacketSpawnDistributor());
+            this.disguisePacketDistributors.put(DisguisePacketDistributorType.DESTROY_PLAYER, new DisguisePacketDestroyDistributor());
+        }
+
+        // regardless of the handling type, we always want these to be loaded
         this.disguisePacketDistributors.put(DisguisePacketDistributorType.VELOCITY, new DisguisePacketVelocityDistributor());
         this.disguisePacketDistributors.put(DisguisePacketDistributorType.ANIMATION, new DisguisePacketAnimationDistributor());
         this.disguisePacketDistributors.put(DisguisePacketDistributorType.EQUIPMENT, new DisguisePacketEquipmentDistributor());
-        this.disguisePacketDistributors.put(DisguisePacketDistributorType.METADATA, new DisguisePacketMetadataDistributor());
         this.disguisePacketDistributors.put(DisguisePacketDistributorType.ATTACH_RIDING_OR_LEASH, new DisguisePacketAttachDistributor());
-        this.disguisePacketDistributors.put(DisguisePacketDistributorType.SPAWNING_PLAYER, new DisguisePacketSpawnDistributor());
-        this.disguisePacketDistributors.put(DisguisePacketDistributorType.DESTROY_PLAYER, new DisguisePacketDestroyDistributor());
     }
 
     @EventHandler
