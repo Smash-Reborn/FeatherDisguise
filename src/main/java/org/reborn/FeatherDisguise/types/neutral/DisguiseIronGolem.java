@@ -22,4 +22,9 @@ public class DisguiseIronGolem extends AbstractDisguise<IronGolemMetadataHolder>
     @NotNull public Sound getDisguiseDeathSound() {
         return Sound.IRONGOLEM_DEATH;
     }
+
+    @Override
+    public double getSquidRelatedEntityYOffset() {
+        return 0.25d;
+    }
 }

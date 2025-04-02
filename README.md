@@ -7,4 +7,3 @@
 
  ## bugs:
  - finish documentation
- - some nametags could be better positioned (enderman, witch, etc)

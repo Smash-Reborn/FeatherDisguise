@@ -27,4 +27,9 @@ public class DisguiseWitch extends AbstractDisguise<WitchMetadataHolder> {
     public float getDisguiseBaseSoundPitch() {
         return 0.6f;
     }
+
+    @Override
+    public double getSquidRelatedEntityYOffset() {
+        return 0.25d;
+    }
 }

@@ -22,4 +22,9 @@ public class DisguiseEnderman extends AbstractDisguise<EndermanMetadataHolder> {
     @NotNull public Sound getDisguiseDeathSound() {
         return Sound.ENDERMAN_DEATH;
     }
+
+    @Override
+    public double getSquidRelatedEntityYOffset() {
+        return 0.25d;
+    }
 }
