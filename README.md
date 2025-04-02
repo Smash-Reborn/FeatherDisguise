@@ -1,6 +1,6 @@
 # FeatherDisguise
 ### A lightweight non-bullshit Super Smash Mobs disguise plugin for Minecraft 1.8.
-[![Environment](https://img.shields.io/badge/environment-serverside-blue.svg)](https://shields.io/) [![MinecraftVersion](https://img.shields.io/badge/minecraftversion-1.8-blue.svg)](https://shields.io/) [![Release](https://img.shields.io/badge/release-1.1.0-blue.svg)](https://shields.io/) [![CodeStatus](https://img.shields.io/badge/status-stable-green.svg)](https://shields.io/) [![JarVersion](https://img.shields.io/badge/servertype-spigot-orange.svg)](https://shields.io/)
+[![Environment](https://img.shields.io/badge/environment-serverside-blue.svg)](https://shields.io/) [![MinecraftVersion](https://img.shields.io/badge/minecraftversion-1.8-blue.svg)](https://shields.io/) [![Release](https://img.shields.io/badge/release-1.1.1-blue.svg)](https://shields.io/) [![CodeStatus](https://img.shields.io/badge/status-stable-green.svg)](https://shields.io/) [![JarVersion](https://img.shields.io/badge/servertype-spigot-orange.svg)](https://shields.io/)
 <br />
 <br />
 
