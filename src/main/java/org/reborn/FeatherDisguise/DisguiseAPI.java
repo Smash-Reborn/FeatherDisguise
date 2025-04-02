@@ -138,7 +138,7 @@ public class DisguiseAPI implements ITeardown {
     public void removeDisguise(@NotNull Player player, boolean showPlayerAfterRemoval) {
         final Optional<AbstractDisguise<?>> optPlayerDisguise = this.getPlayerDisguise(player);
         if (!optPlayerDisguise.isPresent()) {
-            log.info("Player ({}) does not have a valid disguise active. Early exiting method call", player.getName());
+            //log.info("Player ({}) does not have a valid disguise active. Early exiting method call", player.getName());
             return;
         }
 

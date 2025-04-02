@@ -2,8 +2,6 @@ package org.reborn.FeatherDisguise.tracker;
 
 import com.github.retrooper.packetevents.PacketEvents;
 import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerEntityMetadata;
-import io.netty.buffer.Unpooled;
-import lombok.extern.log4j.Log4j2;
 import net.minecraft.server.v1_8_R3.*;
 import org.bukkit.craftbukkit.v1_8_R3.entity.CraftPlayer;
 import org.bukkit.entity.Player;
@@ -17,10 +15,8 @@ import org.reborn.FeatherDisguise.metadata.EntityType;
 import org.reborn.FeatherDisguise.types.AbstractDisguise;
 import org.spigotmc.AsyncCatcher;
 
-import java.io.IOException;
 import java.util.*;
 
-@Log4j2
 public class FeatherEntityTrackerEntry extends EntityTrackerEntry {
 
     /*
@@ -363,21 +359,12 @@ public class FeatherEntityTrackerEntry extends EntityTrackerEntry {
             // greater than 4 units, allow the head rotation to be updated
             if (Math.abs(a - this.i) >= 4) {
                 this.i = a;
-
-                try {
-                    // lmfao gotta use the bytebuffer cos spigot doesn't provide an objectless constructor for headrot packets
-                    final PacketDataSerializer dataSerializer = new PacketDataSerializer(Unpooled.buffer());
-                    dataSerializer.writeByte(disguisedEntity == null ? tracker.getId() : disguisedEntity.getRelatedEntitiesWrapper().getBaseDisguiseEntity().getVirtualID());
-                    dataSerializer.writeByte(disguisedEntity != null && disguisedEntity.isHeadRotationYawLocked() ? (byte) 0 : a);
-
-                    final PacketPlayOutEntityHeadRotation headRotPacket = new PacketPlayOutEntityHeadRotation();
-                    headRotPacket.a(dataSerializer);
-                    this.broadcast(headRotPacket);
-
-                } catch (IOException ex) {
-                    log.warn("Failed to serialize byte buffer data for head rotation packets relating to entity (ID: {}, Name: {})",
-                            tracker.getId(), tracker.getName(), ex);
-                }
+                final PacketPlayOutEntityHeadRotation headRotPacket = new PacketPlayOutEntityHeadRotation(
+                        disguisedEntity == null ? tracker : disguisedEntity.getRelatedEntitiesWrapper().getBaseDisguiseEntity().getVirtualEntity(),
+                        disguisedEntity != null && disguisedEntity.isHeadRotationYawLocked() ? (byte) 0 : (byte) a);
+                this.broadcast(headRotPacket);
+                // stupid way to do this, directly calling the virtual entity (even though we shouldn't need to).
+                // because packetdataserializer is very finiky and not stable at all in these versions...
             }
 
             // tracker.ai --> tracker.isAirBorne
@@ -497,6 +484,11 @@ public class FeatherEntityTrackerEntry extends EntityTrackerEntry {
             if (isShowingBaseEntity) this.updatePlayer(nmsPlayer);
             else this.updatePlayerForDisguises(nmsPlayer);
         }
+    }
+
+    public void forcePositionRotationSynchronisation() {
+        this.m = this.c; // make the updateCounter = updateFrequency to force packet calculations
+        this.ticksSinceLastForcedTeleportSynchronisation = this.maximumAllowedTicksUntilForcedTeleportSynchronisation + 1; // make ticks counter greater than the max, forcing a teleport synchronisation
     }
 
     @Override

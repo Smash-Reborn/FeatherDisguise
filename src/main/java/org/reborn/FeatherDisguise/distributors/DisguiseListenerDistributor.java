@@ -133,12 +133,12 @@ public class DisguiseListenerDistributor implements ITeardown, Listener {
 
     @EventHandler
     public void onDisguisedPlayerQuitRemoveData(PlayerQuitEvent e) {
-        featherDisguise.getDisguiseAPI().removeDisguise(e.getPlayer(), false);
+        featherDisguise.getDisguiseAPI().removeDisguise(e.getPlayer(), false); // todo this gets spammed a lot ?
     }
 
     @EventHandler
     public void onDisguisedPlayerKickedRemoveData(PlayerKickEvent e) {
-        featherDisguise.getDisguiseAPI().removeDisguise(e.getPlayer(), false);
+        featherDisguise.getDisguiseAPI().removeDisguise(e.getPlayer(), false); // todo this gets spammed a lot ?
     }
 
     @EventHandler

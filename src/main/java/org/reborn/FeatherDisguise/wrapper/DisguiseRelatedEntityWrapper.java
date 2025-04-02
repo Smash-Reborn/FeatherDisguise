@@ -10,10 +10,12 @@ import io.github.retrooper.packetevents.util.SpigotConversionUtil;
 import lombok.Getter;
 import lombok.extern.log4j.Log4j2;
 import net.minecraft.server.v1_8_R3.*;
+import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.craftbukkit.v1_8_R3.entity.CraftPlayer;
+import org.bukkit.potion.PotionEffectType;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 import org.reborn.FeatherDisguise.metadata.types.AbstractMetadataHolder;
@@ -80,6 +82,17 @@ public class DisguiseRelatedEntityWrapper<E extends AbstractMetadataHolder<?>> {
         // armor-stand entity spawn
         // armor-stand entity metadata
         // armor-stand attach -> squid entity
+
+        // weird edge-case fix:
+        //      before generating metadata, we need to make sure "invisibility" is properly set. for some reason,
+        //      when gamemode changes occur, if the player is "SPECTATOR" but the entity tracker doesn't correctly
+        //      determine this OR the interceptors don't correctly synchronise gamestates, this can cause disguises
+        //      to render non-invisible while the disguised player is technically in spectator mode. we do so below here.
+        //      (this doesn't occur in modern, so i assume this is another jank 1.8 related nms thing)
+        if (this.owningDisguise.getOwningBukkitPlayer().getGameMode() == GameMode.SPECTATOR ||
+                this.owningDisguise.getOwningBukkitPlayer().hasPotionEffect(PotionEffectType.INVISIBILITY)) {
+            this.baseDisguiseEntity.getMetadataHolder().setInvisible(true);
+        }
 
         Optional<List<EntityData>> optDisguiseEntityDependentMetadata = this.baseDisguiseEntity.getMetadataHolder().getConstructedListOfMetadata();
         if (!optDisguiseEntityDependentMetadata.isPresent()) {

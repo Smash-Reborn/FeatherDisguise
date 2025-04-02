@@ -247,7 +247,7 @@ public class FeatherEntityTracker extends EntityTracker implements ITeardown {
 
         // taken from modern ChunkMap<> tracking methods. preliminary optimisation on the method call
         if (entity.getWorld() != nmsWorld || !trackedObjects.containsKey(entity.getId())) {
-            log.warn("Entity (ID: {}) is either not being tracked or its current world does not match the trackers world reference", entity.getId());
+            //log.warn("Entity (ID: {}) is either not being tracked or its current world does not match the trackers world reference", entity.getId());
             return;
         }
 
@@ -301,6 +301,12 @@ public class FeatherEntityTracker extends EntityTracker implements ITeardown {
         if (!trackedObjects.containsKey(trackedEntity.getId())) return;
         trackedObjects.get(trackedEntity.getId()).disguiseHandled_ScanPlayers(players, isShowingBaseEntity);
         // loops through all provided players and will call updatePlayer() individually (which will either sent spawning packets for the player entity OR disguise entities)
+    }
+
+    public void checkForTrackedEntityAndForcePositionSynchronisation(@NotNull final Entity trackedEntity) {
+        Preconditions.checkNotNull(trackedObjects, "Tracked hashmap for feather entity tracker is invalid or null. Unable to force position synchronisation");
+        if (!trackedObjects.containsKey(trackedEntity.getId())) return;
+        trackedObjects.get(trackedEntity.getId()).forcePositionRotationSynchronisation();
     }
 
     @Override

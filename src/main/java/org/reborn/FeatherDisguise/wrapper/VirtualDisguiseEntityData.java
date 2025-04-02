@@ -5,25 +5,40 @@ import net.minecraft.server.v1_8_R3.Entity;
 import net.minecraft.server.v1_8_R3.NBTTagCompound;
 import net.minecraft.server.v1_8_R3.World;
 import org.bukkit.craftbukkit.v1_8_R3.CraftWorld;
+import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 import org.reborn.FeatherDisguise.metadata.types.AbstractMetadataHolder;
 
 import java.util.UUID;
 
-@Getter
 public class VirtualDisguiseEntityData<T extends AbstractMetadataHolder<?>> {
 
-    private final int virtualID;
+    @ApiStatus.Internal
+    @NotNull private final BlankEntity blank;
 
-    @NotNull private final UUID virtualUUID;
-
-    @NotNull private final T metadataHolder;
+    @Getter @NotNull private final T metadataHolder;
 
     public VirtualDisguiseEntityData(@NotNull final T metadataHolder, @NotNull final org.bukkit.World bukkitWorld) {
-        final BlankEntity blankEnt = new BlankEntity(((CraftWorld) bukkitWorld).getHandle());
-        this.virtualID = blankEnt.getId();
-        this.virtualUUID = blankEnt.getUniqueID();
+        this.blank = new BlankEntity(((CraftWorld) bukkitWorld).getHandle());
         this.metadataHolder = metadataHolder;
+    }
+
+    public int getVirtualID() {
+        return this.blank.getId();
+    }
+
+    @NotNull public UUID getVirtualUUID() {
+        return this.blank.getUniqueID();
+    }
+
+    // warning: just use the getters above for vars you want.
+    //          the only reason this is included is that some
+    //          packets don't provide the correct constructors we want,
+    //          and they usually take the actual entity object.
+    //          this is more-so for convenience, but not in a good way...
+    @ApiStatus.Experimental
+    @NotNull public Entity getVirtualEntity() {
+        return this.blank;
     }
 
     /*

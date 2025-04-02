@@ -2,6 +2,7 @@ package org.reborn.FeatherDisguise.types.hostile;
 
 import lombok.extern.log4j.Log4j2;
 import net.minecraft.server.v1_8_R3.EntityPlayer;
+import net.minecraft.server.v1_8_R3.EntityTracker;
 import net.minecraft.server.v1_8_R3.EntityTrackerEntry;
 import net.minecraft.server.v1_8_R3.PacketPlayOutEntityTeleport;
 import org.bukkit.Sound;
@@ -9,9 +10,12 @@ import org.bukkit.craftbukkit.v1_8_R3.CraftWorld;
 import org.bukkit.craftbukkit.v1_8_R3.entity.CraftPlayer;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
+import org.reborn.FeatherDisguise.FeatherDisguise;
 import org.reborn.FeatherDisguise.enums.DisguiseType;
+import org.reborn.FeatherDisguise.enums.PacketHandlingType;
 import org.reborn.FeatherDisguise.metadata.EntityDimensions;
 import org.reborn.FeatherDisguise.metadata.types.hostile.MagmaCubeMetadataHolder;
+import org.reborn.FeatherDisguise.tracker.FeatherEntityTracker;
 import org.reborn.FeatherDisguise.types.AbstractDisguise;
 import org.reborn.FeatherDisguise.util.DisguiseUtil;
 import org.reborn.FeatherDisguise.util.PacketUtil;
@@ -50,6 +54,8 @@ public class DisguiseMagmaCube extends AbstractDisguise<MagmaCubeMetadataHolder>
 
         this.getRelatedEntitiesWrapper().sendUpdateMetadataForBaseDisguiseEntityToAllViewingPlayers();
 
+        final EntityPlayer nmsPlayer = ((CraftPlayer) this.getOwningBukkitPlayer()).getHandle();
+
         // now we will send a teleport packet to all viewing clients, synchronising the new position
         //      (the reason we call the players entity tracker is that we want to use the calculated
         //       vars within the entry to determine their absolute tick position. if we use the nms
@@ -57,25 +63,34 @@ public class DisguiseMagmaCube extends AbstractDisguise<MagmaCubeMetadataHolder>
         //       synchronisation ticks or deltas, the disguise will jerk instead of smoothly interpolating.
         //       doing it this way ensures the fake teleport packet we are sending mimics the one the tracker
         //       would have also sent out, removing any of the weird jerkiness or de-synchronisation)
-        final EntityPlayer nmsPlayer = ((CraftPlayer) this.getOwningBukkitPlayer()).getHandle();
-        final EntityTrackerEntry nmsPlayerEntityTracker =
-                ((CraftWorld) this.getOwningBukkitPlayer().getWorld()).getHandle().tracker.trackedEntities.get(nmsPlayer.getId());
+        if (FeatherDisguise.getStaticInstance().getDisguiseAPI().getPacketHandlingType() == PacketHandlingType.VIRGIN_PACKET_INTERCEPTION) {
+            final EntityTrackerEntry nmsPlayerEntityTracker =
+                    ((CraftWorld) this.getOwningBukkitPlayer().getWorld()).getHandle().tracker.trackedEntities.get(nmsPlayer.getId());
 
-        if (nmsPlayerEntityTracker == null) { // if the player is in the world, this should never ever happen, but just in case...
-            log.warn("Unable to fetch player ({}) entity tracker entry. Cannot update absolute position for disguise related entities ({})",
-                    this.getOwningBukkitPlayer().getName(), this.getDisguiseType());
-            return;
+            if (nmsPlayerEntityTracker == null) { // if the player is in the world, this should never ever happen, but just in case...
+                log.warn("Unable to fetch player ({}) entity tracker entry. Cannot update absolute position for disguise related entities ({})",
+                        this.getOwningBukkitPlayer().getName(), this.getDisguiseType());
+                return;
+            }
+
+            final PacketPlayOutEntityTeleport fakeTPPacket = new PacketPlayOutEntityTeleport(
+                    nmsPlayer.getId(),
+                    nmsPlayerEntityTracker.xLoc,
+                    nmsPlayerEntityTracker.yLoc,
+                    nmsPlayerEntityTracker.zLoc,
+                    (byte) nmsPlayerEntityTracker.yRot,
+                    (byte) nmsPlayerEntityTracker.xRot,
+                    nmsPlayer.onGround);
+            DisguiseUtil.getPlayersInWorldExcluding(this.getOwningBukkitPlayer())
+                    .forEach(viewer -> PacketUtil.sendNMSPacket(viewer, fakeTPPacket));
         }
 
-        final PacketPlayOutEntityTeleport fakeTPPacket = new PacketPlayOutEntityTeleport(
-                nmsPlayer.getId(),
-                nmsPlayerEntityTracker.xLoc,
-                nmsPlayerEntityTracker.yLoc,
-                nmsPlayerEntityTracker.zLoc,
-                (byte) nmsPlayerEntityTracker.yRot,
-                (byte) nmsPlayerEntityTracker.xRot,
-                nmsPlayer.onGround);
-        DisguiseUtil.getPlayersInWorldExcluding(this.getOwningBukkitPlayer())
-                .forEach(viewer -> PacketUtil.sendNMSPacket(viewer, fakeTPPacket));
+        // assume we are using the TRACKER handler type, so lets manually handle updating the position of the squid
+        else {
+            final EntityTracker entityTracker = ((CraftWorld) this.getOwningBukkitPlayer().getWorld()).getHandle().tracker;
+            if (entityTracker instanceof FeatherEntityTracker) {
+                ((FeatherEntityTracker) entityTracker).checkForTrackedEntityAndForcePositionSynchronisation(nmsPlayer);
+            }
+        }
     }
 }

@@ -90,7 +90,84 @@ public class CachedEntityTypes implements ITeardown {
 
     @Nullable public EntityType<?> getEntityTypeViaReference(@NotNull final Entity entity) {
         Preconditions.checkNotNull(cachedEntityTypeMap, "Cached entity type map is empty or invalid. Unable to fetch entity type");
-        return cachedEntityTypeMap.get(entity.getClass());
+
+        EntityType<?> entityType = cachedEntityTypeMap.get(entity.getClass());
+        if (entityType != null) return entityType;
+        // hopefully this is all it will ever have to get too
+
+        // really really really stupid af thing here, but i can't think of any other way to handle this atm.
+        // the problem is when custom nms entities exist (eg: MyCustomPotion extends EntityPotion) the above
+        // check will fail, because the cache is only storing the exact class reference. how the nms tracker
+        // got around this was its instanceof checks for all the entities. entities store no enum or identifying
+        // object, so im not sure how to correctly determine if a custom entity extends a cached entity type.
+
+        // so ill fold and do the super cringe instanceof block for now, but this 100000% needs to be fixed eventually.
+        // remember: this part of the code only calls if it's a custom nms entity
+
+        if (entity instanceof EntityArmorStand) {entityType = EntityType.ARMOR_STAND;}
+        else if (entity instanceof EntityCreeper) {entityType = EntityType.CREEPER;}
+        else if (entity instanceof EntitySkeleton) {entityType = EntityType.SKELETON;}
+        else if (entity instanceof EntityCaveSpider) {entityType = EntityType.CAVE_SPIDER;} // needs to come before spider else unreachable
+        else if (entity instanceof EntitySpider) {entityType = EntityType.SPIDER;}
+        else if (entity instanceof EntityGiantZombie) {entityType = EntityType.GIANT;}
+        else if (entity instanceof EntityPigZombie) {entityType = EntityType.ZOMBIE_PIGMAN;} // needs to come before zombie else unreachable
+        else if (entity instanceof EntityZombie) {entityType = EntityType.ZOMBIE;}
+        else if (entity instanceof EntityMagmaCube) {entityType = EntityType.MAGMA_CUBE;} // needs to come before slime else unreachable
+        else if (entity instanceof EntitySlime) {entityType = EntityType.SLIME;}
+        else if (entity instanceof EntityGhast) {entityType = EntityType.GHAST;}
+        else if (entity instanceof EntityEnderman) {entityType = EntityType.ENDERMAN;}
+        else if (entity instanceof EntitySilverfish) {entityType = EntityType.SILVERFISH;}
+        else if (entity instanceof EntityBlaze) {entityType = EntityType.BLAZE;}
+        else if (entity instanceof EntityWither) {entityType = EntityType.WITHER_BOSS;}
+        else if (entity instanceof EntityBat) {entityType = EntityType.BAT;}
+        else if (entity instanceof EntityWitch) {entityType = EntityType.WITCH;}
+        else if (entity instanceof EntityEndermite) {entityType = EntityType.ENDERMITE;}
+        else if (entity instanceof EntityGuardian) {entityType = EntityType.GUARDIAN;}
+        else if (entity instanceof EntityPig) {entityType = EntityType.PIG;}
+        else if (entity instanceof EntitySheep) {entityType = EntityType.SHEEP;}
+        else if (entity instanceof EntityMushroomCow) {entityType = EntityType.MUSHROOM_COW;} // needs to come before cow else unreachable
+        else if (entity instanceof EntityCow) {entityType = EntityType.COW;}
+        else if (entity instanceof EntityChicken) {entityType = EntityType.CHICKEN;}
+        else if (entity instanceof EntitySquid) {entityType = EntityType.SQUID;}
+        else if (entity instanceof EntityWolf) {entityType = EntityType.WOLF;}
+        else if (entity instanceof EntitySnowman) {entityType = EntityType.SNOWMAN;}
+        else if (entity instanceof EntityOcelot) {entityType = EntityType.OCELOT;}
+        else if (entity instanceof EntityIronGolem) {entityType = EntityType.IRON_GOLEM;}
+        else if (entity instanceof EntityHorse) {entityType = EntityType.HORSE;}
+        else if (entity instanceof EntityRabbit) {entityType = EntityType.RABBIT;}
+        else if (entity instanceof EntityVillager) {entityType = EntityType.VILLAGER;}
+        else if (entity instanceof EntityPlayer) {entityType = EntityType.PLAYER;}
+
+        else if (entity instanceof EntityItem) {entityType = EntityType.ITEM_TILE;}
+        else if (entity instanceof EntityExperienceOrb) {entityType = EntityType.EXPERIENCE_ORB;}
+        else if (entity instanceof EntityEgg) {entityType = EntityType.EGG;}
+        else if (entity instanceof EntityLeash) {entityType = EntityType.LEASH_HITCH;}
+        else if (entity instanceof EntityPainting) {entityType = EntityType.PAINTING;}
+        else if (entity instanceof EntityArrow) {entityType = EntityType.ARROW;}
+        else if (entity instanceof EntitySnowball) {entityType = EntityType.SNOWBALL;}
+        else if (entity instanceof EntityLargeFireball) {entityType = EntityType.LARGE_FIREBALL;}
+        else if (entity instanceof EntitySmallFireball) {entityType = EntityType.SMALL_FIREBALL;}
+        else if (entity instanceof EntityEnderPearl) {entityType = EntityType.ENDER_PEARL;}
+        else if (entity instanceof EntityEnderSignal) {entityType = EntityType.EYE_OF_ENDER;}
+        else if (entity instanceof EntityPotion) {entityType = EntityType.POTION;}
+        else if (entity instanceof EntityThrownExpBottle) {entityType = EntityType.EXPERIENCE_BOTTLE;}
+        else if (entity instanceof EntityItemFrame) {entityType = EntityType.ITEM_FRAME;}
+        else if (entity instanceof EntityWitherSkull) {entityType = EntityType.WITHER_SKULL;}
+        else if (entity instanceof EntityTNTPrimed) {entityType = EntityType.PRIMED_TNT;}
+        else if (entity instanceof EntityFallingBlock) {entityType = EntityType.FALLING_BLOCK;}
+        else if (entity instanceof EntityFireworks) {entityType = EntityType.FIREWORKS;}
+        else if (entity instanceof EntityBoat) {entityType = EntityType.BOAT;}
+        else if (entity instanceof EntityMinecartRideable) {entityType = EntityType.MINECART_RIDEABLE;}
+        else if (entity instanceof EntityMinecartChest) {entityType = EntityType.MINECART_CHEST;}
+        else if (entity instanceof EntityMinecartFurnace) {entityType = EntityType.MINECART_FURNACE;}
+        else if (entity instanceof EntityMinecartTNT) {entityType = EntityType.MINECART_TNT;}
+        else if (entity instanceof EntityMinecartHopper) {entityType = EntityType.MINECART_HOPPER;}
+        else if (entity instanceof EntityMinecartMobSpawner) {entityType = EntityType.MINECART_MOB_SPAWNER;}
+        else if (entity instanceof EntityMinecartCommandBlock) {entityType = EntityType.MINECART_COMMAND_BLOCK;}
+        else if (entity instanceof EntityEnderCrystal) {entityType = EntityType.ENDER_CRYSTAL;}
+        else if (entity instanceof EntityFishingHook) {entityType = EntityType.FISHING_HOOK;}
+
+        return entityType;
     }
 
     @Override
