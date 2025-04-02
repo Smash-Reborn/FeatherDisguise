@@ -299,17 +299,13 @@ public class FeatherEntityTrackerEntry extends EntityTrackerEntry {
                         this.k = tracker.motY;
                         this.l = tracker.motZ;
 
-                        if (disguisedEntity == null) {
-                            this.broadcast(new PacketPlayOutEntityVelocity(tracker.getId(), this.j, this.k, this.l));
-                            // for this specific case, velocity must be sent first. do not put into the packet list.
-                            // this is a bug carried over from the superclass, where sending velocity post pos update
-                            // causes certain entities (like arrows) to become de-synchronised from their positions clientside -> serverside.
-                            // not sure the best way to fix this, but for now doing it this way parodies how the tracker previously would work
-                        }
-
-                        else {
-                            packetsToSend.add(new PacketPlayOutEntityVelocity(disguisedEntity.getRelatedEntitiesWrapper().getBaseDisguiseEntity().getVirtualID(), this.j, this.k, this.l));
-                        }
+                        // note: we don't need to handle velocity packets within the list because the VelocityPacketDistributor
+                        //       is always active regardless of PacketHandlingType. so that will handle velocity updates for us instead.
+                        this.broadcast(new PacketPlayOutEntityVelocity(tracker.getId(), this.j, this.k, this.l));
+                        // for this specific case, velocity must be sent first. do not put into the packet list.
+                        // this is a bug carried over from the superclass, where sending velocity post pos update
+                        // causes certain entities (like arrows) to become de-synchronised from their positions clientside -> serverside.
+                        // not sure the best way to fix this, but for now doing it this way parodies how the tracker previously would work
                     }
                 }
 
