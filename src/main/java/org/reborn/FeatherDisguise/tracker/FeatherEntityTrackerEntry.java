@@ -266,7 +266,14 @@ public class FeatherEntityTrackerEntry extends EntityTrackerEntry {
 
                         // CraftBukkit patch - refresh list of who can see the tracked entity (if it's a player) before sending teleport packet
                         // (this is to ensure they are actually visible to all viewing clients, else sending the packet might cause it to not work on the client cos it's not "visible" to them)
-                        if (tracker instanceof EntityPlayer) {this.s_scanPlayers(trackedPlayers);}
+                        if (tracker instanceof EntityPlayer) {
+                            this.s_scanPlayers(new HashSet<>(trackedPlayers));
+                            // ConcurrentModException fix, Issue #3:
+                            // super-class entity tracker entry always calls a new array list to avoid CME errors due to the trackedPlayers set
+                            // being accessed and modified at the same time this method is called on the main thread. obviously, this is a very
+                            // stupid way of doing this. we call our internal s_scanPlayers method to avoid the arraylist call however this doesn't
+                            // actually solve the problem itself. for now, this fix will prevent the exception but this should defos be improved.
+                        }
 
                         if (disguisedEntity == null) {
                             packetsToSend.add(new PacketPlayOutEntityTeleport(tracker.getId(),
@@ -427,9 +434,11 @@ public class FeatherEntityTrackerEntry extends EntityTrackerEntry {
                     // if the player being updated "cannot see" the tracked entity, we can early exit
                 }
 
-                if (entityPlayer.removeQueue.contains(tracker.getId())) {
-                    entityPlayer.removeQueue.remove(tracker.getId()); // remove from vanishAPI queue
-                }
+                try {
+                    if (entityPlayer.removeQueue.contains(tracker.getId())) {
+                        entityPlayer.removeQueue.remove(tracker.getId()); // remove from vanishAPI queue
+                    }
+                } catch (Exception ex) { }
 
                 // [!] add them to the tracked set, they are now considered as having been sent SPAWNING packets
                 trackedPlayers.add(entityPlayer);

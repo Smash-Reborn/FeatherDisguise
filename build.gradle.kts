@@ -6,7 +6,7 @@ plugins {
 
 // --> packaging
 group = "org.reborn"
-version = "1.1.1"
+version = "1.1.2"
 description = "A lightweight non-bullshit ssm disguise plugin"
 
 // --> version control
