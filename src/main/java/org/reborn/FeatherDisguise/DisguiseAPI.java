@@ -19,7 +19,7 @@ import org.reborn.FeatherDisguise.enums.ViewType;
 import org.reborn.FeatherDisguise.tracker.DisguiseTrackerListener;
 import org.reborn.FeatherDisguise.types.AbstractDisguise;
 import org.reborn.FeatherDisguise.util.DisguiseUtil;
-import org.reborn.FeatherDisguise.util.ITeardown;
+import org.reborn.FeatherDisguise.util.Teardown;
 import org.reborn.FeatherDisguise.util.PacketUtil;
 
 import java.util.Collections;
@@ -27,7 +27,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Log4j2
-public class DisguiseAPI implements ITeardown {
+public class DisguiseAPI implements Teardown {
 
     @Nullable private Int2ObjectOpenHashMap<AbstractDisguise<?>> activeDisguiseData;
 

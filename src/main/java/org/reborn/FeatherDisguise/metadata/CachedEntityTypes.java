@@ -5,7 +5,7 @@ import net.minecraft.server.v1_8_R3.*;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.reborn.FeatherDisguise.util.ITeardown;
+import org.reborn.FeatherDisguise.util.Teardown;
 
 import java.util.HashMap;
 
@@ -15,7 +15,7 @@ import java.util.HashMap;
  * mem storage for this is piss easy, and it will be referenced so frequently by the custom tracker it makes
  * sense to make it as fast as it possibly can be. direct reference to the hashmap will always be superior to the other mojank methods.
  */
-public class CachedEntityTypes implements ITeardown {
+public class CachedEntityTypes implements Teardown {
 
     @ApiStatus.Internal
     private HashMap<Class<? extends Entity>, EntityType<?>> cachedEntityTypeMap;

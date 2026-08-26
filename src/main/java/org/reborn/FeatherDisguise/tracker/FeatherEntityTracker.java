@@ -11,7 +11,7 @@ import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 import org.reborn.FeatherDisguise.FeatherDisguise;
 import org.reborn.FeatherDisguise.metadata.EntityType;
-import org.reborn.FeatherDisguise.util.ITeardown;
+import org.reborn.FeatherDisguise.util.Teardown;
 import org.spigotmc.AsyncCatcher;
 import org.spigotmc.TrackingRange;
 
@@ -20,7 +20,7 @@ import java.util.List;
 import java.util.Set;
 
 @Log4j2
-public class FeatherEntityTracker extends EntityTracker implements ITeardown {
+public class FeatherEntityTracker extends EntityTracker implements Teardown {
 
     @ApiStatus.Internal
     @NotNull private final FeatherDisguise featherDisguise;

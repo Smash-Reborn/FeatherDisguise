@@ -4,6 +4,8 @@ import lombok.Getter;
 import net.minecraft.server.v1_8_R3.*;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+import org.reborn.FeatherDisguise.wrappers.dimension.EntityDimension;
 
 import java.util.function.Function;
 
@@ -13,6 +15,8 @@ import java.util.function.Function;
  */
 @Getter
 public class EntityType<T extends Entity> {
+    
+    // region Fields
 
     // NMS entity class
     @NotNull private final Class<? extends Entity> entityClass;
@@ -33,13 +37,19 @@ public class EntityType<T extends Entity> {
     private final boolean trackerAllowVelocityUpdates;
 
     // Defined entity dimensions (ripped from decomp)
-    @NotNull private final EntityDimensions entityDimensions;
+    @NotNull private final EntityDimension EntityDimension;
 
     // Entity -> Packet<> (returns packet used for spawning entity) (1.8 has many different types for some reason loool)
     @NotNull private final Function<T, Packet<?>> spawningPacket;
 
+    // Entity -> PacketSpawnEntityLiving<> (returns packet used for spawning living entities. workaround fix for stupid mojank code)
+    @Nullable
+    private final Function<T, PacketPlayOutSpawnEntityLiving> packetEventsLivingSpawnPacket;
+
     @ApiStatus.Internal
     private static final int DEFAULT_OR_UNKNOWN_ENTITY_REF_ID = -1;
+    
+    // endregion
 
     // region Living Entities
 
@@ -82,6 +92,7 @@ public class EntityType<T extends Entity> {
     @NotNull public static final EntityType<EntityHorse> SKELETON_HORSE;
     @NotNull public static final EntityType<EntityRabbit> RABBIT;
     @NotNull public static final EntityType<EntityVillager> VILLAGER;
+    @NotNull public static final EntityType<EntityEnderDragon> ENDER_DRAGON;
     @NotNull public static final EntityType<EntityPlayer> PLAYER;
 
     // endregion
@@ -118,17 +129,22 @@ public class EntityType<T extends Entity> {
     @NotNull public static final EntityType<EntityFishingHook> FISHING_HOOK;
 
     // endregion
+    
+    // region Constructors
 
     public static <T extends Entity> EntityType<T> register(final Class<T> entity, final org.bukkit.entity.EntityType entityType, final String entityName,
                                                             final int entityReferenceID, final int trackerUpdateFrequency, final boolean trackerAllowVelocityUpdates,
-                                                            final EntityDimensions entityDimensions, final Function<T, Packet<?>> spawningPacket) {
+                                                            final EntityDimension EntityDimension, final Function<T, Packet<?>> spawningPacket,
+                                                            final Function<T, PacketPlayOutSpawnEntityLiving> optionalPacketEventsLivingSpawnPacket) {
 
-        return new EntityType<>(entity, entityType, entityName, entityReferenceID, trackerUpdateFrequency, trackerAllowVelocityUpdates, entityDimensions, spawningPacket);
+        return new EntityType<>(entity, entityType, entityName, entityReferenceID, trackerUpdateFrequency, trackerAllowVelocityUpdates, EntityDimension,
+                spawningPacket, optionalPacketEventsLivingSpawnPacket);
     }
 
     public EntityType(@NotNull final Class<T> entityClass, @NotNull final org.bukkit.entity.EntityType entityType, @NotNull final String entityName,
                       final int entityReferenceID, final int trackerUpdateFrequency, final boolean trackerAllowVelocityUpdates,
-                      @NotNull final EntityDimensions entityDimensions, @NotNull final Function<T, Packet<?>> spawningPacket) {
+                      @NotNull final EntityDimension EntityDimension, @NotNull final Function<T, Packet<?>> spawningPacket,
+                      @Nullable final Function<T, PacketPlayOutSpawnEntityLiving> packetEventsLivingSpawnPacket) {
 
         this.entityClass = entityClass;
         this.bukkitEntityType = entityType;
@@ -136,8 +152,9 @@ public class EntityType<T extends Entity> {
         this.entityReferenceID = entityReferenceID;
         this.trackerUpdateFrequency = trackerUpdateFrequency;
         this.trackerAllowVelocityUpdates = trackerAllowVelocityUpdates;
-        this.entityDimensions = entityDimensions;
+        this.EntityDimension = EntityDimension;
         this.spawningPacket = spawningPacket;
+        this.packetEventsLivingSpawnPacket = packetEventsLivingSpawnPacket;
     }
 
     @SuppressWarnings("unchecked")
@@ -145,147 +162,161 @@ public class EntityType<T extends Entity> {
         return spawningPacket.apply((T) entity);
     }
 
+    @SuppressWarnings("unchecked")
+    public PacketPlayOutSpawnEntityLiving getLivingEntitySpawningPacketFromEntity(@NotNull final EntityLiving entityLiving) {
+        return packetEventsLivingSpawnPacket != null ? packetEventsLivingSpawnPacket.apply((T) entityLiving) : null;
+    }
+    
+    // endregion
+
     static { // these are exactly copied from nms EntityTypes.class
-        ARMOR_STAND = register(EntityArmorStand.class, org.bukkit.entity.EntityType.ARMOR_STAND, "ArmorStand", 30, 3, true,
-                new EntityDimensions(0.5f, 1.975f, 1.7775f), entityArmorStand -> new PacketPlayOutSpawnEntity(entityArmorStand, 78));
+        ARMOR_STAND = register(EntityArmorStand.class, org.bukkit.entity.EntityType.ARMOR_STAND, "ArmorStand", 30, 2, true,                             // trackerUpdateFrequency is 3 in NMS
+                new EntityDimension(0.5f, 1.975f, 1.7775f), entityArmorStand -> new PacketPlayOutSpawnEntity(entityArmorStand, 78), null);
         CREEPER = register(EntityCreeper.class, org.bukkit.entity.EntityType.CREEPER, "Creeper", 50, 3, true,
-                new EntityDimensions(0.6f, 1.8f), PacketPlayOutSpawnEntityLiving::new);
+                new EntityDimension(0.6f, 1.8f), PacketPlayOutSpawnEntityLiving::new, EntityType::livingEntityPacket);
         SKELETON = register(EntitySkeleton.class, org.bukkit.entity.EntityType.SKELETON, "Skeleton", 51, 3, true,
-                new EntityDimensions(0.6f, 1.95f, 1.74f), PacketPlayOutSpawnEntityLiving::new);
+                new EntityDimension(0.6f, 1.95f, 1.74f), PacketPlayOutSpawnEntityLiving::new, EntityType::livingEntityPacket);
         WITHER_SKELETON = register(EntitySkeleton.class, org.bukkit.entity.EntityType.SKELETON, "Skeleton", 51, 3, true,
-                new EntityDimensions(0.72f, 2.535f, 2.1f), PacketPlayOutSpawnEntityLiving::new);        // has to use SKELETON data
+                new EntityDimension(0.72f, 2.535f, 2.1f), PacketPlayOutSpawnEntityLiving::new, EntityType::livingEntityPacket);        // has to use SKELETON data
         SPIDER = register(EntitySpider.class, org.bukkit.entity.EntityType.SPIDER, "Spider", 52, 3, true,
-                new EntityDimensions(1.4f, 0.9f, 0.65f), PacketPlayOutSpawnEntityLiving::new);
+                new EntityDimension(1.4f, 0.9f, 0.65f), PacketPlayOutSpawnEntityLiving::new, EntityType::livingEntityPacket);
         GIANT = register(EntityGiantZombie.class, org.bukkit.entity.EntityType.GIANT, "Giant", 53, 3, true,
-                new EntityDimensions(3.6f, 12.0f, 10.44f), PacketPlayOutSpawnEntityLiving::new);
+                new EntityDimension(3.6f, 12.0f, 10.44f), PacketPlayOutSpawnEntityLiving::new, EntityType::livingEntityPacket);
         ZOMBIE = register(EntityZombie.class, org.bukkit.entity.EntityType.ZOMBIE, "Zombie", 54, 3, true,
-                new EntityDimensions(0.6f, 1.95f, 1.74f), PacketPlayOutSpawnEntityLiving::new);
+                new EntityDimension(0.6f, 1.95f, 1.74f), PacketPlayOutSpawnEntityLiving::new, EntityType::livingEntityPacket);
         ZOMBIE_VILLAGER = register(EntityZombie.class, org.bukkit.entity.EntityType.ZOMBIE, "Zombie", 54, 3, true,
-                new EntityDimensions(0.6f, 1.95f, 1.74f), PacketPlayOutSpawnEntityLiving::new);                // has to use ZOMBIE data
+                new EntityDimension(0.6f, 1.95f, 1.74f), PacketPlayOutSpawnEntityLiving::new, EntityType::livingEntityPacket);                // has to use ZOMBIE data
         SLIME = register(EntitySlime.class, org.bukkit.entity.EntityType.SLIME, "Slime", 55, 3, true,
-                new EntityDimensions(0.51000005f, 0.51000005f, 0.325f), PacketPlayOutSpawnEntityLiving::new);
+                new EntityDimension(0.51000005f, 0.51000005f, 0.325f), PacketPlayOutSpawnEntityLiving::new, EntityType::livingEntityPacket);
         GHAST = register(EntityGhast.class, org.bukkit.entity.EntityType.GHAST, "Ghast", 56, 3, true,
-                new EntityDimensions(4.0f, 4.0f, 2.6f), PacketPlayOutSpawnEntityLiving::new);
+                new EntityDimension(4.0f, 4.0f, 2.6f), PacketPlayOutSpawnEntityLiving::new, EntityType::livingEntityPacket);
         ZOMBIE_PIGMAN = register(EntityPigZombie.class, org.bukkit.entity.EntityType.PIG_ZOMBIE, "PigZombie", 57, 3, true,
-                new EntityDimensions(0.6f, 1.95f, 1.79f), PacketPlayOutSpawnEntityLiving::new);
+                new EntityDimension(0.6f, 1.95f, 1.79f), PacketPlayOutSpawnEntityLiving::new, EntityType::livingEntityPacket);
         ENDERMAN = register(EntityEnderman.class, org.bukkit.entity.EntityType.ENDERMAN, "Enderman", 58, 3, true,
-                new EntityDimensions(0.6f, 2.9f, 2.55f), PacketPlayOutSpawnEntityLiving::new);
+                new EntityDimension(0.6f, 2.9f, 2.55f), PacketPlayOutSpawnEntityLiving::new, EntityType::livingEntityPacket);
         CAVE_SPIDER = register(EntityCaveSpider.class, org.bukkit.entity.EntityType.CAVE_SPIDER, "CaveSpider", 59, 3, true,
-                new EntityDimensions(0.7f, 0.5f, 0.45f), PacketPlayOutSpawnEntityLiving::new);
+                new EntityDimension(0.7f, 0.5f, 0.45f), PacketPlayOutSpawnEntityLiving::new, EntityType::livingEntityPacket);
         SILVERFISH = register(EntitySilverfish.class, org.bukkit.entity.EntityType.SILVERFISH, "Silverfish", 60, 3, true,
-                new EntityDimensions(0.4f, 0.3f, 0.13f), PacketPlayOutSpawnEntityLiving::new);
+                new EntityDimension(0.4f, 0.3f, 0.13f), PacketPlayOutSpawnEntityLiving::new, EntityType::livingEntityPacket);
         BLAZE = register(EntityBlaze.class, org.bukkit.entity.EntityType.BLAZE, "Blaze", 61, 3, true,
-                new EntityDimensions(0.6f, 1.8f), PacketPlayOutSpawnEntityLiving::new);
+                new EntityDimension(0.6f, 1.8f), PacketPlayOutSpawnEntityLiving::new, EntityType::livingEntityPacket);
         MAGMA_CUBE = register(EntityMagmaCube.class, org.bukkit.entity.EntityType.MAGMA_CUBE, "LavaSlime", 62, 3, true,
-                new EntityDimensions(0.51000005f, 0.51000005f, 0.325f), PacketPlayOutSpawnEntityLiving::new);
+                new EntityDimension(0.51000005f, 0.51000005f, 0.325f), PacketPlayOutSpawnEntityLiving::new, EntityType::livingEntityPacket);
         WITHER_BOSS = register(EntityWither.class, org.bukkit.entity.EntityType.WITHER, "WitherBoss", 64,3, false,
-                new EntityDimensions(0.9f, 3.5f), PacketPlayOutSpawnEntityLiving::new);
+                new EntityDimension(0.9f, 3.5f), PacketPlayOutSpawnEntityLiving::new, EntityType::livingEntityPacket);
         BAT = register(EntityBat.class, org.bukkit.entity.EntityType.BAT, "Bat", 65, 3, false,
-                new EntityDimensions(0.5f, 0.9f, 0.45f), PacketPlayOutSpawnEntityLiving::new);
+                new EntityDimension(0.5f, 0.9f, 0.45f), PacketPlayOutSpawnEntityLiving::new, EntityType::livingEntityPacket);
         WITCH = register(EntityWitch.class, org.bukkit.entity.EntityType.WITCH, "Witch", 66, 3, true,
-                new EntityDimensions(0.6f, 1.95f, 1.62f), PacketPlayOutSpawnEntityLiving::new);
+                new EntityDimension(0.6f, 1.95f, 1.62f), PacketPlayOutSpawnEntityLiving::new, EntityType::livingEntityPacket);
         ENDERMITE = register(EntityEndermite.class, org.bukkit.entity.EntityType.ENDERMITE, "Endermite", 67, 3, true,
-                new EntityDimensions(0.4f, 0.3f, 0.13f), PacketPlayOutSpawnEntityLiving::new);
+                new EntityDimension(0.4f, 0.3f, 0.13f), PacketPlayOutSpawnEntityLiving::new, EntityType::livingEntityPacket);
         GUARDIAN = register(EntityGuardian.class, org.bukkit.entity.EntityType.GUARDIAN, "Guardian", 68, 3, true,
-                new EntityDimensions(0.85f, 0.85f, 0.425f), PacketPlayOutSpawnEntityLiving::new);
+                new EntityDimension(0.85f, 0.85f, 0.425f), PacketPlayOutSpawnEntityLiving::new, EntityType::livingEntityPacket);
         ELDER_GUARDIAN = register(EntityGuardian.class, org.bukkit.entity.EntityType.GUARDIAN, "Guardian", 68, 3, true,
-                new EntityDimensions(1.9975f, 1.9975f, 0.99875f), PacketPlayOutSpawnEntityLiving::new);         // has to use GUARDIAN data
+                new EntityDimension(1.9975f, 1.9975f, 0.99875f), PacketPlayOutSpawnEntityLiving::new, EntityType::livingEntityPacket);        // has to use GUARDIAN data
         PIG = register(EntityPig.class, org.bukkit.entity.EntityType.PIG, "Pig", 90, 3, true,
-                new EntityDimensions(0.9f, 0.9f, 0.86875f), PacketPlayOutSpawnEntityLiving::new);
+                new EntityDimension(0.9f, 0.9f, 0.86875f), PacketPlayOutSpawnEntityLiving::new, EntityType::livingEntityPacket);
         SHEEP = register(EntitySheep.class, org.bukkit.entity.EntityType.SHEEP, "Sheep", 91, 3, true,
-                new EntityDimensions(0.9f, 1.3f, 1.235f), PacketPlayOutSpawnEntityLiving::new);
+                new EntityDimension(0.9f, 1.3f, 1.235f), PacketPlayOutSpawnEntityLiving::new, EntityType::livingEntityPacket);
         COW = register(EntityCow.class, org.bukkit.entity.EntityType.COW, "Cow", 92, 3, true,
-                new EntityDimensions(0.9f, 1.3f), PacketPlayOutSpawnEntityLiving::new);
+                new EntityDimension(0.9f, 1.3f), PacketPlayOutSpawnEntityLiving::new, EntityType::livingEntityPacket);
         CHICKEN = register(EntityChicken.class, org.bukkit.entity.EntityType.CHICKEN, "Chicken", 93, 3, true,
-                new EntityDimensions(0.4f, 0.7f, 0.644f), PacketPlayOutSpawnEntityLiving::new);
+                new EntityDimension(0.4f, 0.7f, 0.644f), PacketPlayOutSpawnEntityLiving::new, EntityType::livingEntityPacket);
         SQUID = register(EntitySquid.class, org.bukkit.entity.EntityType.SQUID, "Squid", 94, 3, true,
-                new EntityDimensions(0.8f, 0.8f, 0.4f), PacketPlayOutSpawnEntityLiving::new);
+                new EntityDimension(0.8f, 0.8f, 0.4f), PacketPlayOutSpawnEntityLiving::new, EntityType::livingEntityPacket);
         WOLF = register(EntityWolf.class, org.bukkit.entity.EntityType.WOLF, "Wolf", 95, 3, true,
-                new EntityDimensions(0.6f, 0.8f, 0.68f), PacketPlayOutSpawnEntityLiving::new);
+                new EntityDimension(0.6f, 0.8f, 0.68f), PacketPlayOutSpawnEntityLiving::new, EntityType::livingEntityPacket);
         MUSHROOM_COW = register(EntityMushroomCow.class, org.bukkit.entity.EntityType.MUSHROOM_COW, "MushroomCow", 96, 3, true,
-                new EntityDimensions(0.9f, 1.3f), PacketPlayOutSpawnEntityLiving::new);
+                new EntityDimension(0.9f, 1.3f), PacketPlayOutSpawnEntityLiving::new, EntityType::livingEntityPacket);
         SNOWMAN = register(EntitySnowman.class, org.bukkit.entity.EntityType.SNOWMAN, "SnowMan", 97, 3, true,
-                new EntityDimensions(0.7f, 1.9f, 1.7f), PacketPlayOutSpawnEntityLiving::new);
+                new EntityDimension(0.7f, 1.9f, 1.7f), PacketPlayOutSpawnEntityLiving::new, EntityType::livingEntityPacket);
         OCELOT = register(EntityOcelot.class, org.bukkit.entity.EntityType.OCELOT, "Ozelot", 98, 3, true,
-                new EntityDimensions(0.6f, 0.7f), PacketPlayOutSpawnEntityLiving::new);
+                new EntityDimension(0.6f, 0.7f), PacketPlayOutSpawnEntityLiving::new, EntityType::livingEntityPacket);
         IRON_GOLEM = register(EntityIronGolem.class, org.bukkit.entity.EntityType.IRON_GOLEM, "VillagerGolem", 99, 3, true,
-                new EntityDimensions(1.4f, 2.9f, 2.55f), PacketPlayOutSpawnEntityLiving::new);
+                new EntityDimension(1.4f, 2.9f, 2.55f), PacketPlayOutSpawnEntityLiving::new, EntityType::livingEntityPacket);
         HORSE = register(EntityHorse.class, org.bukkit.entity.EntityType.HORSE, "EntityHorse", 100, 3, true,
-                new EntityDimensions(1.4f, 1.6f, 1.52f), PacketPlayOutSpawnEntityLiving::new);
+                new EntityDimension(1.4f, 1.6f, 1.52f), PacketPlayOutSpawnEntityLiving::new, EntityType::livingEntityPacket);
         DONKEY = register(EntityHorse.class, org.bukkit.entity.EntityType.HORSE, "EntityHorse", 100, 3, true,
-                new EntityDimensions(1.4f, 1.6f, 1.52f), PacketPlayOutSpawnEntityLiving::new);         // has to use HORSE data
+                new EntityDimension(1.4f, 1.6f, 1.52f), PacketPlayOutSpawnEntityLiving::new, EntityType::livingEntityPacket);        // has to use HORSE data
         MULE = register(EntityHorse.class, org.bukkit.entity.EntityType.HORSE, "EntityHorse", 100, 3, true,
-                new EntityDimensions(1.4f, 1.6f, 1.52f), PacketPlayOutSpawnEntityLiving::new);         // has to use HORSE data
+                new EntityDimension(1.4f, 1.6f, 1.52f), PacketPlayOutSpawnEntityLiving::new, EntityType::livingEntityPacket);        // has to use HORSE data
         ZOMBIE_HORSE = register(EntityHorse.class, org.bukkit.entity.EntityType.HORSE, "EntityHorse", 100, 3, true,
-                new EntityDimensions(1.4f, 1.6f, 1.52f), PacketPlayOutSpawnEntityLiving::new);         // has to use HORSE data
+                new EntityDimension(1.4f, 1.6f, 1.52f), PacketPlayOutSpawnEntityLiving::new, EntityType::livingEntityPacket);        // has to use HORSE data
         SKELETON_HORSE = register(EntityHorse.class, org.bukkit.entity.EntityType.HORSE, "EntityHorse", 100, 3, true,
-                new EntityDimensions(1.4f, 1.6f, 1.52f), PacketPlayOutSpawnEntityLiving::new);         // has to use HORSE data
+                new EntityDimension(1.4f, 1.6f, 1.52f), PacketPlayOutSpawnEntityLiving::new, EntityType::livingEntityPacket);         // has to use HORSE data
         RABBIT = register(EntityRabbit.class, org.bukkit.entity.EntityType.RABBIT, "Rabbit", 101, 3, true,
-                new EntityDimensions(0.6f, 0.7f), PacketPlayOutSpawnEntityLiving::new);
+                new EntityDimension(0.6f, 0.7f), PacketPlayOutSpawnEntityLiving::new, EntityType::livingEntityPacket);
         VILLAGER = register(EntityVillager.class, org.bukkit.entity.EntityType.VILLAGER, "Villager", 120, 3, true,
-                new EntityDimensions(0.6f, 1.8f), PacketPlayOutSpawnEntityLiving::new);
+                new EntityDimension(0.6f, 1.8f), PacketPlayOutSpawnEntityLiving::new, EntityType::livingEntityPacket);
+        ENDER_DRAGON = register(EntityEnderDragon.class, org.bukkit.entity.EntityType.ENDER_DRAGON, "EnderDragon", 63, 3, true,
+                new EntityDimension(16.0f, 8.0f), PacketPlayOutSpawnEntityLiving::new, EntityType::livingEntityPacket);
         PLAYER = register(EntityPlayer.class, org.bukkit.entity.EntityType.PLAYER, "Player", DEFAULT_OR_UNKNOWN_ENTITY_REF_ID, 2, false,
-                new EntityDimensions(0.6f, 1.8f), PacketPlayOutNamedEntitySpawn::new);
+                new EntityDimension(0.6f, 1.8f), PacketPlayOutNamedEntitySpawn::new, null);
 
         ITEM_TILE = register(EntityItem.class, org.bukkit.entity.EntityType.DROPPED_ITEM, "Item", 2, 20, true,
-                new EntityDimensions(0.25f, 0.25f), itemTileEntity -> new PacketPlayOutSpawnEntity(itemTileEntity, 2, 1));
+                new EntityDimension(0.25f, 0.25f), itemTileEntity -> new PacketPlayOutSpawnEntity(itemTileEntity, 2, 1), null);
         EXPERIENCE_ORB = register(EntityExperienceOrb.class, org.bukkit.entity.EntityType.EXPERIENCE_ORB, "XPOrb", DEFAULT_OR_UNKNOWN_ENTITY_REF_ID, 3, true,
-                new EntityDimensions(0.5f, 0.5f), PacketPlayOutSpawnEntityExperienceOrb::new);
+                new EntityDimension(0.5f, 0.5f), PacketPlayOutSpawnEntityExperienceOrb::new, null);
         EGG = register(EntityEgg.class, org.bukkit.entity.EntityType.EGG, "ThrownEgg", 62, 10, true,
-                new EntityDimensions(0.25f, 0.25f), entityEgg -> new PacketPlayOutSpawnEntity(entityEgg, 62));
+                new EntityDimension(0.25f, 0.25f), entityEgg -> new PacketPlayOutSpawnEntity(entityEgg, 62), null);
         LEASH_HITCH = register(EntityLeash.class, org.bukkit.entity.EntityType.LEASH_HITCH, "LeashKnot", 77, Integer.MAX_VALUE, false,
-                new EntityDimensions(0.5f, 0.5f), EntityType::leashHitchPacket);
+                new EntityDimension(0.5f, 0.5f), EntityType::leashHitchPacket, null);
         PAINTING = register(EntityPainting.class, org.bukkit.entity.EntityType.PAINTING, "Painting", DEFAULT_OR_UNKNOWN_ENTITY_REF_ID, Integer.MAX_VALUE, false,
-                new EntityDimensions(0.5f, 0.5f), PacketPlayOutSpawnEntityPainting::new);
+                new EntityDimension(0.5f, 0.5f), PacketPlayOutSpawnEntityPainting::new, null);
         ARROW = register(EntityArrow.class, org.bukkit.entity.EntityType.ARROW, "Arrow", 60, 20, false,
-                new EntityDimensions(0.5f, 0.5f), EntityType::arrowPacket);
+                new EntityDimension(0.5f, 0.5f), EntityType::arrowPacket, null);
         SNOWBALL = register(EntitySnowball.class, org.bukkit.entity.EntityType.SNOWBALL, "Snowball", 61,10, true,
-                new EntityDimensions(0.25f, 0.25f), entitySnowball -> new PacketPlayOutSpawnEntity(entitySnowball, 61));
+                new EntityDimension(0.25f, 0.25f), entitySnowball -> new PacketPlayOutSpawnEntity(entitySnowball, 61), null);
         LARGE_FIREBALL = register(EntityLargeFireball.class, org.bukkit.entity.EntityType.FIREBALL, "Fireball", 63, 10, false,
-                new EntityDimensions(1.0f, 1.0f), entityLargeFireball -> abstractFireballPacket(entityLargeFireball, 63));
+                new EntityDimension(1.0f, 1.0f), entityLargeFireball -> abstractFireballPacket(entityLargeFireball, 63), null);
         SMALL_FIREBALL = register(EntitySmallFireball.class, org.bukkit.entity.EntityType.SMALL_FIREBALL, "SmallFireball", 64, 10, false,
-                new EntityDimensions(0.3125f, 0.3125f), entitySmallFireball -> abstractFireballPacket(entitySmallFireball, 64));
+                new EntityDimension(0.3125f, 0.3125f), entitySmallFireball -> abstractFireballPacket(entitySmallFireball, 64), null);
         ENDER_PEARL = register(EntityEnderPearl.class, org.bukkit.entity.EntityType.ENDER_PEARL, "ThrownEnderpearl", 65, 10, true,
-                new EntityDimensions(0.25f, 0.25f), entityEnderPearl -> new PacketPlayOutSpawnEntity(entityEnderPearl, 65));
+                new EntityDimension(0.25f, 0.25f), entityEnderPearl -> new PacketPlayOutSpawnEntity(entityEnderPearl, 65),  null);
         EYE_OF_ENDER = register(EntityEnderSignal.class, org.bukkit.entity.EntityType.ENDER_SIGNAL, "EyeOfEnderSignal", 72, 4, true,
-                new EntityDimensions(0.25f, 0.25f), entityEnderSignal -> new PacketPlayOutSpawnEntity(entityEnderSignal, 72));
+                new EntityDimension(0.25f, 0.25f), entityEnderSignal -> new PacketPlayOutSpawnEntity(entityEnderSignal, 72),  null);
         POTION = register(EntityPotion.class, org.bukkit.entity.EntityType.SPLASH_POTION, "ThrownPotion", 73, 10, true,
-                new EntityDimensions(0.25f, 0.25f), entityPotion -> new PacketPlayOutSpawnEntity(entityPotion, 73, entityPotion.getPotionValue()));
+                new EntityDimension(0.25f, 0.25f), entityPotion -> new PacketPlayOutSpawnEntity(entityPotion, 73, entityPotion.getPotionValue()),  null);
         EXPERIENCE_BOTTLE = register(EntityThrownExpBottle.class, org.bukkit.entity.EntityType.THROWN_EXP_BOTTLE, "ThrownExpBottle", 75, 10, true,
-                new EntityDimensions(0.25f, 0.25f), entityThrownExpBottle -> new PacketPlayOutSpawnEntity(entityThrownExpBottle, 75));
+                new EntityDimension(0.25f, 0.25f), entityThrownExpBottle -> new PacketPlayOutSpawnEntity(entityThrownExpBottle, 75),  null);
         ITEM_FRAME = register(EntityItemFrame.class, org.bukkit.entity.EntityType.ITEM_FRAME, "ItemFrame", 71, Integer.MAX_VALUE, false,
-                new EntityDimensions(0.5f, 0.5f), EntityType::itemFramePacket);
+                new EntityDimension(0.5f, 0.5f), EntityType::itemFramePacket,  null);
         WITHER_SKULL = register(EntityWitherSkull.class, org.bukkit.entity.EntityType.WITHER_SKULL, "WitherSkull", 66, 10, false,
-                new EntityDimensions(0.3125f, 0.3125f), entityWitherSkull -> abstractFireballPacket(entityWitherSkull, 66));
+                new EntityDimension(0.3125f, 0.3125f), entityWitherSkull -> abstractFireballPacket(entityWitherSkull, 66),  null);
         PRIMED_TNT = register(EntityTNTPrimed.class, org.bukkit.entity.EntityType.PRIMED_TNT, "PrimedTnt", 50, 10, true,
-                new EntityDimensions(0.98f, 0.98f), entityTNTPrimed -> new PacketPlayOutSpawnEntity(entityTNTPrimed, 50));
+                new EntityDimension(0.98f, 0.98f), entityTNTPrimed -> new PacketPlayOutSpawnEntity(entityTNTPrimed, 50),  null);
         FALLING_BLOCK = register(EntityFallingBlock.class, org.bukkit.entity.EntityType.FALLING_BLOCK, "FallingSand", 70, 20, true,
-                new EntityDimensions(1.0f, 1.0f), entityFallingBlock -> new PacketPlayOutSpawnEntity(entityFallingBlock, 70, Block.getCombinedId(entityFallingBlock.getBlock())));
+                new EntityDimension(0.98f, 0.98f), entityFallingBlock -> new PacketPlayOutSpawnEntity(entityFallingBlock, 70, Block.getCombinedId(entityFallingBlock.getBlock())),  null);
         FIREWORKS = register(EntityFireworks.class, org.bukkit.entity.EntityType.FIREWORK, "FireworksRocketEntity", 76, 10, true,
-                new EntityDimensions(0.25f, 0.25f), entityFireworks -> new PacketPlayOutSpawnEntity(entityFireworks, 76));
+                new EntityDimension(0.25f, 0.25f), entityFireworks -> new PacketPlayOutSpawnEntity(entityFireworks, 76),  null);
         BOAT = register(EntityBoat.class, org.bukkit.entity.EntityType.BOAT, "Boat", 1, 3, true,
-                new EntityDimensions(1.5f, 0.6f), entityBoat -> new PacketPlayOutSpawnEntity(entityBoat, 1));
+                new EntityDimension(1.5f, 0.6f), entityBoat -> new PacketPlayOutSpawnEntity(entityBoat, 1),  null);
         MINECART_RIDEABLE = register(EntityMinecartRideable.class, org.bukkit.entity.EntityType.MINECART, EntityMinecartAbstract.EnumMinecartType.RIDEABLE.b(), 10, 3, true,
-                new EntityDimensions(0.98f, 0.7f), EntityType::abstractMinecartPacket);
+                new EntityDimension(0.98f, 0.7f), EntityType::abstractMinecartPacket,  null);
         MINECART_CHEST = register(EntityMinecartChest.class, org.bukkit.entity.EntityType.MINECART_CHEST, EntityMinecartAbstract.EnumMinecartType.CHEST.b(), 10, 3, true,
-                new EntityDimensions(0.98f, 0.7f), EntityType::abstractMinecartPacket);
+                new EntityDimension(0.98f, 0.7f), EntityType::abstractMinecartPacket,  null);
         MINECART_FURNACE = register(EntityMinecartFurnace.class, org.bukkit.entity.EntityType.MINECART_FURNACE, EntityMinecartAbstract.EnumMinecartType.FURNACE.b(), 10, 3, true,
-                new EntityDimensions(0.98f, 0.7f), EntityType::abstractMinecartPacket);
+                new EntityDimension(0.98f, 0.7f), EntityType::abstractMinecartPacket,  null);
         MINECART_TNT = register(EntityMinecartTNT.class, org.bukkit.entity.EntityType.MINECART_TNT, EntityMinecartAbstract.EnumMinecartType.TNT.b(), 10, 3, true,
-                new EntityDimensions(0.98f, 0.7f), EntityType::abstractMinecartPacket);
+                new EntityDimension(0.98f, 0.7f), EntityType::abstractMinecartPacket,  null);
         MINECART_HOPPER = register(EntityMinecartHopper.class, org.bukkit.entity.EntityType.MINECART_HOPPER, EntityMinecartAbstract.EnumMinecartType.HOPPER.b(), 10, 3, true,
-                new EntityDimensions(0.98f, 0.7f), EntityType::abstractMinecartPacket);
+                new EntityDimension(0.98f, 0.7f), EntityType::abstractMinecartPacket,  null);
         MINECART_MOB_SPAWNER = register(EntityMinecartMobSpawner.class, org.bukkit.entity.EntityType.MINECART_MOB_SPAWNER, EntityMinecartAbstract.EnumMinecartType.SPAWNER.b(), 10, 3, true,
-                new EntityDimensions(0.98f, 0.7f), EntityType::abstractMinecartPacket);
+                new EntityDimension(0.98f, 0.7f), EntityType::abstractMinecartPacket,  null);
         MINECART_COMMAND_BLOCK = register(EntityMinecartCommandBlock.class, org.bukkit.entity.EntityType.MINECART_COMMAND, EntityMinecartAbstract.EnumMinecartType.COMMAND_BLOCK.b(), 10, 3, true,
-                new EntityDimensions(0.98f, 0.7f), EntityType::abstractMinecartPacket);
+                new EntityDimension(0.98f, 0.7f), EntityType::abstractMinecartPacket,  null);
         ENDER_CRYSTAL = register(EntityEnderCrystal.class, org.bukkit.entity.EntityType.ENDER_CRYSTAL, "EnderCrystal", 51, Integer.MAX_VALUE, false,
-                new EntityDimensions(2.0f, 2.0f), entityEnderCrystal -> new PacketPlayOutSpawnEntity(entityEnderCrystal, 51));
+                new EntityDimension(2.0f, 2.0f), entityEnderCrystal -> new PacketPlayOutSpawnEntity(entityEnderCrystal, 51),  null);
         FISHING_HOOK = register(EntityFishingHook.class, org.bukkit.entity.EntityType.FISHING_HOOK, "FishingHook", 90, 5, true,
-                new EntityDimensions(0.25f, 0.25f), entityFishingHook -> new PacketPlayOutSpawnEntity(entityFishingHook, 90, entityFishingHook.owner != null ? entityFishingHook.owner.getId() : entityFishingHook.getId()));
+                new EntityDimension(0.25f, 0.25f), entityFishingHook -> new PacketPlayOutSpawnEntity(entityFishingHook, 90, entityFishingHook.owner != null ? entityFishingHook.owner.getId() : entityFishingHook.getId()),  null);
     }
 
     // region Spawning Packet functions
+    
+    @ApiStatus.Internal
+    @NotNull private static PacketPlayOutSpawnEntityLiving livingEntityPacket(@NotNull final EntityLiving entityLiving) {
+        return new PacketPlayOutSpawnEntityLiving(entityLiving);
+    }
 
     @ApiStatus.Internal
     @NotNull private static PacketPlayOutSpawnEntity arrowPacket(@NotNull final EntityArrow arrowEntity) {
@@ -304,7 +335,13 @@ public class EntityType<T extends Entity> {
 
     @ApiStatus.Internal
     @NotNull private static PacketPlayOutSpawnEntity abstractFireballPacket(@NotNull final EntityFireball abstractFireballEntity, final int fireballEntityID) {
-        return new PacketPlayOutSpawnEntity(abstractFireballEntity, fireballEntityID, abstractFireballEntity.shooter != null ? abstractFireballEntity.shooter.getId() : 0);
+        final PacketPlayOutSpawnEntity spawnPacket = new PacketPlayOutSpawnEntity(abstractFireballEntity, fireballEntityID, abstractFireballEntity.shooter != null ? abstractFireballEntity.shooter.getId() : 0);
+
+        spawnPacket.d((int) (abstractFireballEntity.dirX * 8000.0d));
+        spawnPacket.e((int) (abstractFireballEntity.dirY * 8000.0d));
+        spawnPacket.f((int) (abstractFireballEntity.dirZ * 8000.0d));
+
+        return spawnPacket;
     }
 
     @ApiStatus.Internal

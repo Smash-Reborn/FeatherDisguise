@@ -20,12 +20,12 @@ import org.reborn.FeatherDisguise.enums.PacketHandlingType;
 import org.reborn.FeatherDisguise.protocol.DisguiseIncomingPacketInterceptor;
 import org.reborn.FeatherDisguise.protocol.DisguiseOutgoingPacketInterceptor;
 import org.reborn.FeatherDisguise.types.AbstractDisguise;
-import org.reborn.FeatherDisguise.util.ITeardown;
+import org.reborn.FeatherDisguise.util.Teardown;
 
 import java.util.HashMap;
 
 @Log4j2
-public class DisguiseListenerDistributor implements ITeardown, Listener {
+public class DisguiseListenerDistributor implements Teardown, Listener {
 
     @Getter @NotNull private final FeatherDisguise featherDisguise;
 

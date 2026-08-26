@@ -14,13 +14,13 @@ import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.reborn.FeatherDisguise.FeatherDisguise;
-import org.reborn.FeatherDisguise.util.ITeardown;
+import org.reborn.FeatherDisguise.util.Teardown;
 
 import java.util.HashMap;
 import java.util.Iterator;
 
 @Log4j2
-public class DisguiseTrackerListener implements Listener, ITeardown {
+public class DisguiseTrackerListener implements Listener, Teardown {
 
     @ApiStatus.Internal
     @NotNull private final FeatherDisguise featherDisguise;

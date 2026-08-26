@@ -1,6 +1,6 @@
 package org.reborn.FeatherDisguise.util;
 
-public interface ITeardown {
+public interface Teardown {
 
     void teardown();
 }
